@@ -33,9 +33,31 @@ public:
     
     Box<float> box;
 
-    void update(const std::vector<Boid>& allBoids) {
+    template <typename GetBoxFunc>
+    std::vector<Boid> getNeighbors(float radius, const Quadtree<Boid*, GetBoxFunc>& quadtree) const {
+        float r = box.width * 0.5;
+
+        Box qbox = Box(box.left + r - radius,
+                       box.top + r - radius,
+                       box.left + r + radius,
+                       box.top + r + radius);
+        std::vector<Boid*> neighbors = quadtree.query(qbox);
+        std::vector<Boid> ngh = std::vector<Boid>();
+        for (auto neighbor : neighbors) {
+            if (neighbor->box.left * neighbor->box.left + neighbor->box.top * neighbor->box.top > radius * radius) {
+                ngh.push_back(*neighbor);
+            }
+        }
+        return ngh;
+    }
+
+    template <typename GetBoxFunc>
+    void update(const Quadtree<Boid*, GetBoxFunc>& quadtree) {
         float dt = 0.01;
-        auto result = this->getNeighboringBoidsAvgInfo(allBoids);
+        // auto result = this->getNeighboringBoidsAvgInfo(allBoids);
+        std::vector<Boid> neighbors = this->getNeighbors(50, quadtree);
+        auto result = this->getBoidsAvgInfo(neighbors);
+        
         if (result) {
             sf::Vector2f avgPos = result->first;
             sf::Vector2f avgVel = result->second;
@@ -109,7 +131,7 @@ public:
         window.draw(shape);
     }
 
-    std::optional<std::pair<sf::Vector2f, sf::Vector2f>> getNeighboringBoidsAvgInfo(const std::vector<Boid>& boids) {
+    std::optional<std::pair<sf::Vector2f, sf::Vector2f>> getBoidsAvgInfo(const std::vector<Boid>& boids) {
         sf::Vector2f sumPos(0, 0);
         sf::Vector2f sumVel(0, 0);
         int count = 0;
@@ -117,13 +139,10 @@ public:
         const float perceptionRadiusSqr = perceptionRadius*perceptionRadius;
 
         for (const auto& other : boids) {
-            float distance = (pow(position.x - other.position.x, 2) + 
-                                pow(position.y - other.position.y, 2));
-            if (distance > 0 && distance < perceptionRadiusSqr) {
-                sumPos += other.position;
-                sumVel += other.velocity;
-                count++;
-            }
+            sumPos += other.position;
+            sumVel += other.velocity;
+            count++;
+
         }
 
         if (count > 0) {
@@ -144,7 +163,8 @@ auto getBox = [](Boid* boid)
     return boid->box;
 };
 
-std::vector<Boid> getNeighbors(const Boid& boid, float radius, const Quadtree<Boid*, decltype(getBox)>& quadtree) {
+template <typename GetBoxFunc>
+std::vector<Boid> getNeighbors(const Boid& boid, float radius, const Quadtree<Boid*, GetBoxFunc>& quadtree) {
     float r = boid.box.width * 0.5;
 
     Box box = Box(boid.box.left + r - radius,
@@ -182,9 +202,9 @@ int main() {
         }
 
         for (auto& boid : boids) {
-            auto neighbors = getNeighbors(boid, 50, quadtree);
-            std::cout << neighbors.size();
-            boid.update(neighbors);
+            // auto neighbors = getNeighbors(boid, 50, quadtree);
+            // std::cout << neighbors.size();
+            boid.update(boids, quadtree);
         }
 
         window.clear();
