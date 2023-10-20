@@ -3,6 +3,8 @@
 #include <optional>
 #include <iostream>
 #include "external/quad/Quadtree.h"
+#include "external/rapidjson/rapidjson.h"
+
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
