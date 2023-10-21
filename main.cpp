@@ -69,10 +69,10 @@ public:
         float y = this->getY();
 
         Box qbox = Box<float>(x - radius,
-                       y - radius,
-                       2.0 * radius,
-                       2.0 * radius);
-        std::cout << "[" << box.left << ", " << box.left + box.width << "], [" << box.top << ", " << box.top + box.height << "]" << std::endl; 
+                              y - radius,
+                              2.0 * radius,
+                              2.0 * radius);
+        // std::cout << "[" << box.left << ", " << box.left + box.width << "], [" << box.top << ", " << box.top + box.height << "]" << std::endl; 
         std::vector<Boid*> neighbors = quadtree.query(qbox);
         std::vector<Boid> ngh = std::vector<Boid>();
         for (auto neighbor : neighbors) {
@@ -83,11 +83,51 @@ public:
         return ngh;
     }
 
+    void updateAvoidanceDirection(const std::vector<Boid>& neighbors) {
+        sf::Vector2f repulsionForce = sf::Vector2f(0, 0); 
+        sf::Vector2f predictiveAvoidance = sf::Vector2f(0, 0);
+
+        for (Boid neighbor : neighbors) {
+            // Calculate distance to neighbor
+            sf::Vector2f delta = this->position - neighbor.position;
+            float distance = std::sqrt(delta.x * delta.x + delta.y * delta.y); 
+
+            // Repulsion Force
+            if (distance < this->box.width) {
+                sf::Vector2f away = delta;  // vector from neighbor to boid
+                away = away * (std::sqrt(away.x * away.x + away.y * away.y));   // Make it a unit vector
+                away /= distance + 0.0001f;   // Weaker force if further away
+                repulsionForce += away;
+            }
+
+            // Predictive Avoidance
+            // sf::Vector2f futureBoidPosition = this->position + boid.velocity * PREDICTIVE_LOOKAHEAD;
+            // sf::Vector2f futureNeighborPosition = neighbor->position + neighbor->velocity * PREDICTIVE_LOOKAHEAD;
+
+            // if (futureBoidPosition.distanceTo(futureNeighborPosition) < COLLISION_THRESHOLD) {
+            //     Vector2D avoidanceDir = futureBoidPosition - futureNeighborPosition;
+            //     avoidanceDir.normalize();
+            //     predictiveAvoidance += avoidanceDir;
+            // }
+        }
+
+        // Combine forces and normalize
+        sf::Vector2f combined = repulsionForce + predictiveAvoidance;
+        // if (combined.length() > 0) {
+        //     combined.normalize();
+        std::cout << "old: " << this->velocity.x << ", " << this->velocity.y;
+        this->velocity = this->velocity + 0.00001f * combined;
+        std::cout << "--> new: " << this->velocity.x << ", " << this->velocity.y << std::endl;
+        // this->velocity += 0.000001f * combined;
+        // }
+    }
+
+
     template <typename GetBoxFunc>
     void update(const Quadtree<Boid*, GetBoxFunc>& quadtree) {
         float dt = 0.01;
 
-        std::cout << "old: [" << this->getX() << ", " << this->getY() << "]";  
+        // std::cout << "old: [" << this->getX() << ", " << this->getY() << "]";  
 
         if (this->getX() < 0) {
             this->setX(-1.0 * this->getX());
@@ -106,11 +146,12 @@ public:
             velocity.y = -1.0 * velocity.y;
         } 
 
-        std::cout << " --> new:[" << this->getX() << ", " << this->getY() << "]" << std::endl; 
+        // std::cout << " --> new:[" << this->getX() << ", " << this->getY() << "]" << std::endl; 
+
+        std::vector<Boid> touching = this->getNeighbors(this->box.width, quadtree);
+        this->updateAvoidanceDirection(touching);
 
 
-
-        // auto result = this->getNeighboringBoidsAvgInfo(allBoids);
         std::vector<Boid> neighbors = this->getNeighbors(50, quadtree);
         auto result = this->getBoidsAvgInfo(neighbors);
         
@@ -119,48 +160,32 @@ public:
             sf::Vector2f avgVel = result->second;
             // Use avgPos and avgVel as needed
 
-            sf::Vector2f deltaPos = sf::Vector2f(
-                avgPos.x - this->position.x, 
-                avgPos.y - this->position.y);
-            sf::Vector2f deltaVel = sf::Vector2f(
-                avgVel.x - this->velocity.x, 
-                avgVel.y - this->velocity.y);
-
+            sf::Vector2f deltaPos = avgPos - this->position; 
+            sf::Vector2f deltaVel = avgVel - this->velocity; 
             float factorAcc = 0.01;
             float factorPos = 0.002;
 
-            sf::Vector2f deltaAcc = sf::Vector2f(
-                factorPos * deltaPos.x + factorAcc * deltaVel.x,
-                factorPos * deltaPos.y + factorAcc * deltaVel.y
-            );
+            sf::Vector2f deltaAcc = factorPos * deltaPos + factorAcc * deltaVel;
 
-            this->acceleration.x = this->acceleration.x + deltaAcc.x;
-            this->acceleration.y = this->acceleration.y + deltaAcc.y;
-
+            this->acceleration = this->acceleration + deltaAcc;
         }
         else {
-            this->velocity.x = 0.9 * this->velocity.x;
-            this->velocity.y = 0.9 * this->velocity.y;
+            this->velocity = 0.9f * this->velocity;
         }
 
 
-        this->velocity.x = this->velocity.x + this->acceleration.x * DT;
-        this->velocity.y = this->velocity.y + this->acceleration.y * DT;
-        this->position.x = this->position.x + this->velocity.x * DT;
-        this->position.y = this->position.y + this->velocity.y * DT;
+        this->velocity = this->velocity + this->acceleration * DT;
+        this->position = this->position + this->velocity * DT;
 
         float speed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
         if (speed > MAX_SPEED) {
-            velocity.x = (velocity.x / speed) * MAX_SPEED;
-            velocity.y = (velocity.y / speed) * MAX_SPEED;
+            velocity = (velocity / speed) * MAX_SPEED;
         }
 
 
         // TODO(remove redundency of box and position)
-        box.left = position.x;
-        box.top = position.y;
-        
-
+        this->setX(this->getX());
+        this->setY(this->getY());
     };
     void draw(sf::RenderWindow& window) {
         sf::CircleShape shape(5);  // simple circle for each boid
