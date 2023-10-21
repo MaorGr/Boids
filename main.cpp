@@ -2,6 +2,8 @@
 #include <vector>
 #include <optional>
 #include <iostream>
+#include <cmath>
+#include <random>
 #include <gflags/gflags.h>
 #include "external/quad/Quadtree.h"
 #include "external/rapidjson/rapidjson.h"
@@ -33,6 +35,11 @@ private:
     static inline const float maxSpeed = 4.0f; // C++17 inline variable
 
 public:
+    Boid(float x, float y, float vx, float vy) : Boid(x, y) {
+        this->velocity = sf::Vector2f(vx, vy);
+
+    }
+
     Boid(float x, float y) : position(x, y), velocity(0, 0), acceleration(0, 0) {
         touchRadius = 2.5;
         sensingRadius = 50;
@@ -116,7 +123,7 @@ public:
         // if (combined.length() > 0) {
         //     combined.normalize();
         std::cout << "old: " << this->velocity.x << ", " << this->velocity.y;
-        this->velocity = this->velocity + 0.00001f * combined;
+        this->velocity = this->velocity + 0.1f * combined;
         std::cout << "--> new: " << this->velocity.x << ", " << this->velocity.y << std::endl;
         // this->velocity += 0.000001f * combined;
         // }
@@ -201,16 +208,22 @@ public:
         const float perceptionRadiusSqr = perceptionRadius*perceptionRadius;
 
         for (const auto& other : boids) {
+            sf::Vector2f delta = this->position - other.position;
+            const float dist = 1.0f * std::sqrt(delta.x * delta.x + delta.y * delta.y);
+            // sumPos += delta / (10.0f + dist + 0.00001f);
+            // sumVel += other.velocity / (10.0f + dist + 0.00001f);
+
             sumPos += other.position;
             sumVel += other.velocity;
+
             count++;
 
         }
 
         if (count > 0) {
             return std::make_pair(
-                sf::Vector2f(sumPos.x / count, sumPos.y / count), 
-                sf::Vector2f(sumVel.x / count, sumVel.y / count)
+                sumPos / float(count), 
+                sumVel / float(count)
             );
         } else {
             return {};  // No neighbors found
@@ -278,9 +291,20 @@ int main(int argc, char* argv[]) {
 
     auto quadtree = Quadtree<Boid*, decltype(getBox)>(box, getBox);
     auto border = 10;
+
+    std::random_device rd;  // Used to initialize the seed
+    std::mt19937 gen(rd()); // Mersenne Twister pseudo-random generator
+    std::uniform_real_distribution<> dis(0.0, 1.0); // Uniform distribution between 0.0 and 1.0
+
     for (int i = 0; i < 300; i++) {
-        boids.emplace_back(border + rand() % (width - 2* border), 
-                           border + rand() % (height - 2* border));
+        float dir = dis(gen) * 2.0f * M_PI;
+        float v0 = dis(gen) * MAX_SPEED;
+        float vx = std::sin(dir) * v0;
+        float vy = std::cos(dir) * v0;
+        
+        boids.emplace_back(border + int(dis(gen) * width * 10.0f) % (width - 2* border), 
+                           border + int(dis(gen) * height * 10.0f) % (height - 2* border),
+                           vx, vy);
     }
     for (auto& boid : boids)
         quadtree.add(&boid);
