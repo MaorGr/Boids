@@ -17,7 +17,7 @@ DEFINE_string(config_path, "config.json", "path to config");
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
-const float MAX_SPEED = 100.0f;
+const float MAX_SPEED = 25.0f;
 const float DT = 0.01f;
 
 using namespace quadtree;
@@ -42,25 +42,37 @@ public:
         box.height = 2.0 * touchRadius;
     }
 
-    float getX() {
+    float getX() const {
         return this->position.x;
     }
 
     void setX(float x) {
         this->position.x = x;
+        this->box.left = x - this->box.width * 0.5f;
+    }
+    
+    float getY() const {
+        return this->position.y;
+    }
+
+    void setY(float y) {
+        this->position.y = y;
+        this->box.top = y - this->box.height * 0.5f;
     }
     
     Box<float> box;
     
-
     template <typename GetBoxFunc>
     std::vector<Boid> getNeighbors(float radius, const Quadtree<Boid*, GetBoxFunc>& quadtree) const {
         float r = box.width * 0.5;
+        float x = this->getX();
+        float y = this->getY();
 
-        Box qbox = Box(box.left + r - radius,
-                       box.top + r - radius,
-                       box.left + r + radius,
-                       box.top + r + radius);
+        Box qbox = Box<float>(x - radius,
+                       y - radius,
+                       2.0 * radius,
+                       2.0 * radius);
+        std::cout << "[" << box.left << ", " << box.left + box.width << "], [" << box.top << ", " << box.top + box.height << "]" << std::endl; 
         std::vector<Boid*> neighbors = quadtree.query(qbox);
         std::vector<Boid> ngh = std::vector<Boid>();
         for (auto neighbor : neighbors) {
@@ -74,6 +86,30 @@ public:
     template <typename GetBoxFunc>
     void update(const Quadtree<Boid*, GetBoxFunc>& quadtree) {
         float dt = 0.01;
+
+        std::cout << "old: [" << this->getX() << ", " << this->getY() << "]";  
+
+        if (this->getX() < 0) {
+            this->setX(-1.0 * this->getX());
+            velocity.x = -1.0 * velocity.x;
+        } 
+        if (this->getX() > 800) {
+            this->setX(2 * 800.0 - 1.0 * this->getX());
+            velocity.x = -velocity.x;
+        } 
+        if (this->getY() < 0) {
+            this->setY(-1.0 * this->getY());
+            velocity.y = -1.0 * velocity.y;
+        } 
+        if (this->getY() > 600) {
+            this->setY(2 * 600.0 - 1.0 * this->getY());
+            velocity.y = -1.0 * velocity.y;
+        } 
+
+        std::cout << " --> new:[" << this->getX() << ", " << this->getY() << "]" << std::endl; 
+
+
+
         // auto result = this->getNeighboringBoidsAvgInfo(allBoids);
         std::vector<Boid> neighbors = this->getNeighbors(50, quadtree);
         auto result = this->getBoidsAvgInfo(neighbors);
@@ -107,7 +143,6 @@ public:
             this->velocity.y = 0.9 * this->velocity.y;
         }
 
-        std::cout << "old: " << this->position.x;  
 
         this->velocity.x = this->velocity.x + this->acceleration.x * DT;
         this->velocity.y = this->velocity.y + this->acceleration.y * DT;
@@ -120,23 +155,7 @@ public:
             velocity.y = (velocity.y / speed) * MAX_SPEED;
         }
 
-        if (position.x < 0) {
-            position.x = -1.0 * position.x;
-            velocity.x = -1.0 * velocity.x;
-        } 
-        if (position.x > 800) {
-            position.x = 800.0 - position.x;
-            velocity.x = -velocity.x;
-        } 
-        if (position.y < 0) {
-            position.y = -1.0 * position.y;
-            velocity.y = -1.0 * velocity.y;
-        } 
-        if (position.y > 600) {
-            position.y = 600.0 - position.y;
-            velocity.y = -velocity.y;
-        } 
-        std::cout << "new: " << this->position.x << std::endl; 
+
         // TODO(remove redundency of box and position)
         box.left = position.x;
         box.top = position.y;
@@ -176,10 +195,10 @@ public:
 };
 
 
-// auto getBox = [](Boid* boid)
-// {
-//     return boid->box;
-// };
+auto getBox = [](Boid* boid)
+{
+    return boid->box;
+};
 
 // template <typename GetBoxFunc>
 // std::vector<Boid> getNeighbors(const Boid& boid, float radius, const Quadtree<Boid*, GetBoxFunc>& quadtree) {
