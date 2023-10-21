@@ -2,8 +2,17 @@
 #include <vector>
 #include <optional>
 #include <iostream>
+#include <gflags/gflags.h>
 #include "external/quad/Quadtree.h"
 #include "external/rapidjson/rapidjson.h"
+#include "external/rapidjson/document.h"
+#include "external/rapidjson/istreamwrapper.h"
+#include <fstream>
+// #include <external/rapidjson/document.h>
+// #include <external/rapidjson/istreamwrapper.h>
+
+DEFINE_string(config_path, "config.json", "path to config");
+
 
 
 const int WINDOW_WIDTH = 800;
@@ -32,8 +41,17 @@ public:
         box.width = 2.0 * touchRadius;
         box.height = 2.0 * touchRadius;
     }
+
+    float getX() {
+        return this->position.x;
+    }
+
+    void setX(float x) {
+        this->position.x = x;
+    }
     
     Box<float> box;
+    
 
     template <typename GetBoxFunc>
     std::vector<Boid> getNeighbors(float radius, const Quadtree<Boid*, GetBoxFunc>& quadtree) const {
@@ -82,8 +100,6 @@ public:
 
             this->acceleration.x = this->acceleration.x + deltaAcc.x;
             this->acceleration.y = this->acceleration.y + deltaAcc.y;
-
-
 
         }
         else {
@@ -160,38 +176,67 @@ public:
 };
 
 
-auto getBox = [](Boid* boid)
-{
-    return boid->box;
-};
+// auto getBox = [](Boid* boid)
+// {
+//     return boid->box;
+// };
 
-template <typename GetBoxFunc>
-std::vector<Boid> getNeighbors(const Boid& boid, float radius, const Quadtree<Boid*, GetBoxFunc>& quadtree) {
-    float r = boid.box.width * 0.5;
+// template <typename GetBoxFunc>
+// std::vector<Boid> getNeighbors(const Boid& boid, float radius, const Quadtree<Boid*, GetBoxFunc>& quadtree) {
+//     float r = boid.box.width * 0.5;
 
-    Box box = Box(boid.box.left + r - radius,
-                  boid.box.top + r - radius,
-                  boid.box.left + r + radius,
-                  boid.box.top + r + radius);
-    std::vector<Boid*> neighbors = quadtree.query(box);
-    std::vector<Boid> ngh = std::vector<Boid>();
-    for (auto neighbor : neighbors) {
-        ngh.push_back(*neighbor);
-    }
-    return ngh;
+//     Box box = Box(boid.box.left + r - radius,
+//                   boid.box.top + r - radius,
+//                   boid.box.left + r + radius,
+//                   boid.box.top + r + radius);
+//     std::vector<Boid*> neighbors = quadtree.query(box);
+//     std::vector<Boid> ngh = std::vector<Boid>();
+//     for (auto neighbor : neighbors) {
+//         ngh.push_back(*neighbor);
+//     }
+//     return ngh;
+// }
+
+
+rapidjson::Document readJSONConfig(const std::string& filepath) {
+    std::ifstream file(filepath);
+    rapidjson::IStreamWrapper isw(file);
+    
+    rapidjson::Document doc;
+    doc.ParseStream(isw);
+
+    return doc;
 }
 
-int main() {
-    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Swarm Behavior");
+int main(int argc, char* argv[]) {
+    // todo(maor): move to config 
+    int width;
+    int height;
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
+    std::cout << "Config: " << FLAGS_config_path << std::endl;
+    rapidjson::Document config = readJSONConfig(FLAGS_config_path);
+    if (config.HasMember("world")) {
+        const rapidjson::Value& world = config["world"];
 
-    auto box = Box(0.0f, 0.0f, float(WINDOW_WIDTH), float(WINDOW_HEIGHT));
+        if (world.HasMember("width")) {
+            width = world["width"].GetInt();
+            std::cout << width << std::endl;
+        }
+        if (world.HasMember("height")) {
+            height = world["height"].GetInt();
+        }
+    }
+
+    sf::RenderWindow window(sf::VideoMode(width, height), "Swarm Behavior");
+
+    auto box = Box(0.0f, 0.0f, float(width), float(height));
     std::vector<Boid> boids;
 
     auto quadtree = Quadtree<Boid*, decltype(getBox)>(box, getBox);
     auto border = 10;
     for (int i = 0; i < 300; i++) {
-        boids.emplace_back(border + rand() % (WINDOW_WIDTH - 2* border), 
-                           border + rand() % (WINDOW_HEIGHT - 2* border));
+        boids.emplace_back(border + rand() % (width - 2* border), 
+                           border + rand() % (height - 2* border));
     }
     for (auto& boid : boids)
         quadtree.add(&boid);
@@ -206,7 +251,7 @@ int main() {
         for (auto& boid : boids) {
             // auto neighbors = getNeighbors(boid, 50, quadtree);
             // std::cout << neighbors.size();
-            boid.update(boids, quadtree);
+            boid.update(quadtree);
         }
 
         window.clear();
