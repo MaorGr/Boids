@@ -10,8 +10,7 @@
 #include "external/rapidjson/document.h"
 #include "external/rapidjson/istreamwrapper.h"
 #include <fstream>
-// #include <external/rapidjson/document.h>
-// #include <external/rapidjson/istreamwrapper.h>
+#include "world/Boid.h"
 
 DEFINE_string(config_path, "config.json", "path to config");
 
@@ -37,7 +36,6 @@ private:
 public:
     Boid(float x, float y, float vx, float vy) : Boid(x, y) {
         this->velocity = sf::Vector2f(vx, vy);
-
     }
 
     Boid(float x, float y) : position(x, y), velocity(0, 0), acceleration(0, 0) {
@@ -71,7 +69,7 @@ public:
     
     template <typename GetBoxFunc>
     std::vector<Boid> getNeighbors(float radius, const Quadtree<Boid*, GetBoxFunc>& quadtree) const {
-        float r = box.width * 0.5;
+
         float x = this->getX();
         float y = this->getY();
 
@@ -79,11 +77,14 @@ public:
                               y - radius,
                               2.0 * radius,
                               2.0 * radius);
-        // std::cout << "[" << box.left << ", " << box.left + box.width << "], [" << box.top << ", " << box.top + box.height << "]" << std::endl; 
+        // std::cout << "[" << qbox.left << ", " << qbox.left + qbox.width << "], [" << qbox.top << ", " << qbox.top + qbox.height << "]" << std::endl; 
         std::vector<Boid*> neighbors = quadtree.query(qbox);
+        // std::cout << " > " << neighbors.size() << std::endl;
         std::vector<Boid> ngh = std::vector<Boid>();
         for (auto neighbor : neighbors) {
-            if (neighbor->box.left * neighbor->box.left + neighbor->box.top * neighbor->box.top > radius * radius) {
+            if ((this->box.left - neighbor->box.left) * (this->box.left - neighbor->box.left) + 
+                (this->box.top - neighbor->box.top) * (this->box.top - neighbor->box.top) < 
+                radius * radius) {
                 ngh.push_back(*neighbor);
             }
         }
@@ -94,16 +95,18 @@ public:
         sf::Vector2f repulsionForce = sf::Vector2f(0, 0); 
         sf::Vector2f predictiveAvoidance = sf::Vector2f(0, 0);
 
+        float repulsion_factor = 10.0f;
+
         for (Boid neighbor : neighbors) {
             // Calculate distance to neighbor
             sf::Vector2f delta = this->position - neighbor.position;
             float distance = std::sqrt(delta.x * delta.x + delta.y * delta.y); 
 
             // Repulsion Force
-            if (distance < this->box.width) {
+            if (distance < this->box.width * 0.1) {
                 sf::Vector2f away = delta;  // vector from neighbor to boid
                 away = away * (std::sqrt(away.x * away.x + away.y * away.y));   // Make it a unit vector
-                away /= distance + 0.0001f;   // Weaker force if further away
+                away /= (distance + 0.0001f);   // Weaker force if further away
                 repulsionForce += away;
             }
 
@@ -122,9 +125,9 @@ public:
         sf::Vector2f combined = repulsionForce + predictiveAvoidance;
         // if (combined.length() > 0) {
         //     combined.normalize();
-        std::cout << "old: " << this->velocity.x << ", " << this->velocity.y;
-        this->velocity = this->velocity + 0.1f * combined;
-        std::cout << "--> new: " << this->velocity.x << ", " << this->velocity.y << std::endl;
+        // std::cout << "old: " << this->velocity.x << ", " << this->velocity.y;
+        this->velocity = this->velocity + repulsion_factor * combined;
+        // std::cout << "--> new: " << this->velocity.x << ", " << this->velocity.y << std::endl;
         // this->velocity += 0.000001f * combined;
         // }
     }
@@ -159,8 +162,10 @@ public:
         this->updateAvoidanceDirection(touching);
 
 
-        std::vector<Boid> neighbors = this->getNeighbors(50, quadtree);
+        std::vector<Boid> neighbors = this->getNeighbors(50.0f, quadtree);
+        std::cout << neighbors.size() << std::endl;
         auto result = this->getBoidsAvgInfo(neighbors);
+
         
         if (result) {
             sf::Vector2f avgPos = result->first;
@@ -169,15 +174,15 @@ public:
 
             sf::Vector2f deltaPos = avgPos - this->position; 
             sf::Vector2f deltaVel = avgVel - this->velocity; 
-            float factorAcc = 0.01;
-            float factorPos = 0.002;
+            float factorAcc = 0.01f;
+            float factorPos = 0.01f;
 
             sf::Vector2f deltaAcc = factorPos * deltaPos + factorAcc * deltaVel;
 
             this->acceleration = this->acceleration + deltaAcc;
         }
         else {
-            this->velocity = 0.9f * this->velocity;
+            // this->velocity = 0.9f * this->velocity;
         }
 
 
@@ -208,21 +213,21 @@ public:
         const float perceptionRadiusSqr = perceptionRadius*perceptionRadius;
 
         for (const auto& other : boids) {
-            sf::Vector2f delta = this->position - other.position;
-            const float dist = 1.0f * std::sqrt(delta.x * delta.x + delta.y * delta.y);
-            // sumPos += delta / (10.0f + dist + 0.00001f);
-            // sumVel += other.velocity / (10.0f + dist + 0.00001f);
-
-            sumPos += other.position;
-            sumVel += other.velocity;
-
+            sf::Vector2f delta = other.position - this->position;
+            const float dist = std::sqrt(delta.x * delta.x + delta.y * delta.y);
+            if (dist > 0) {
+                float velW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
+                float posW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
+                sumPos += posW * delta;
+                sumVel += velW * other.velocity;
+            }
+         
             count++;
 
         }
-
         if (count > 0) {
             return std::make_pair(
-                sumPos / float(count), 
+                this->position + (sumPos / float(count)), 
                 sumVel / float(count)
             );
         } else {
@@ -301,6 +306,7 @@ int main(int argc, char* argv[]) {
         float v0 = dis(gen) * MAX_SPEED;
         float vx = std::sin(dir) * v0;
         float vy = std::cos(dir) * v0;
+
         
         boids.emplace_back(border + int(dis(gen) * width * 10.0f) % (width - 2* border), 
                            border + int(dis(gen) * height * 10.0f) % (height - 2* border),
