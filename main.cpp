@@ -23,9 +23,15 @@ const float DT = 0.01f;
 
 using namespace quadtree;
 
-auto getBox = [](Boid* boid)
-{
-    return boid->box;
+// auto getBox = [](Boid* boid)
+// {
+//     return boid->box;
+// };
+
+struct GetBoxFunctor {
+    Box<float> operator()(const Boid *boid) const {
+        return boid->getBox();
+    }
 };
 
 rapidjson::Document readJSONConfig(const std::string& filepath) {
@@ -69,7 +75,8 @@ int main(int argc, char* argv[]) {
     auto box = Box(0.0f, 0.0f, float(width), float(height));
     std::vector<Boid> boids;
 
-    auto quadtree = Quadtree<Boid*, decltype(getBox)>(box, getBox);
+    GetBoxFunctor getBoxFunctor;
+    auto quadtree = Quadtree<Boid*,GetBoxFunctor>(box, getBoxFunctor);
     auto border = 10;
 
     std::random_device rd;  // Used to initialize the seed

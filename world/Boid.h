@@ -20,14 +20,15 @@ public:
     float getY() const;
     void setY(float y);
     quadtree::Box <float> box;
+    quadtree::Box <float> getBox() const;
     
     template <typename GetBoxFunc>
     std::vector<Boid> getNeighbors(float radius, const quadtree::Quadtree<Boid*, GetBoxFunc>& quadtree) const;
 
     void updateAvoidanceDirection(const std::vector<Boid>& neighbors);
 
-    template <typename GetBoxFunc>
-    void update(const quadtree::Quadtree<Boid*, GetBoxFunc>& quadtree);
+    // template <typename GetBoxFunc>
+    void update(const quadtree::Quadtree<Boid*, GetBoxFunctor>& quadtree);
     std::optional<std::pair<sf::Vector2f, sf::Vector2f>> getBoidsAvgInfo(const std::vector<Boid>& boids);
 
 };
