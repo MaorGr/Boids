@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 #include <random>
+#include <chrono>  // for the high-resolution clock
+
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>

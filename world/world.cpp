@@ -17,7 +17,7 @@ World::World(World::Config &config) : config_(config) {
     std::mt19937 gen(rd()); // Mersenne Twister pseudo-random generator
     std::uniform_real_distribution<> dis(0.0, 1.0); // Uniform distribution between 0.0 and 1.0
 
-    for (int i = 0; i < 300; i++) {
+    for (int i = 0; i < 1000; i++) {
         float dir = dis(gen) * 2.0f * M_PI;
         float v0 = dis(gen) * max_speed;
         float vx = std::sin(dir) * v0;
@@ -47,19 +47,49 @@ std::vector<Boid> World::getBoids() {
 }
 
 void World::update() {
+
+    std::chrono::duration<double> duration_getNeighbors_flock = std::chrono::duration<double>::zero();
+    std::chrono::duration<double> duration_doFlocking = std::chrono::duration<double>::zero();
+    std::chrono::duration<double> duration_getNeighbors_avoid = std::chrono::duration<double>::zero();
+    std::chrono::duration<double> duration_doAvoid = std::chrono::duration<double>::zero();
+    std::chrono::duration<double> duration_rtree_update = std::chrono::duration<double>::zero();
+
     for (auto& boid : boids) {
         handleMargins(boid); 
-        auto ngh_flock = getNeighbors(boid, 100);
-        boid.doFlocking(ngh_flock);
+        auto start_ngh_flock = std::chrono::high_resolution_clock::now();
+        auto ngh_flock = getNeighbors(boid, 40);
+        auto end_ngh_flock = std::chrono::high_resolution_clock::now();
+        duration_getNeighbors_flock += end_ngh_flock - start_ngh_flock;
 
+        auto start_do_flock = std::chrono::high_resolution_clock::now();
+        boid.doFlocking(ngh_flock);
+        auto end_do_flock = std::chrono::high_resolution_clock::now();
+        duration_doFlocking += end_do_flock - start_do_flock;
+
+        auto start_ngh_avoid = std::chrono::high_resolution_clock::now();
         auto ngh_avoid = getNeighbors(boid, 5);
+        auto end_ngh_avoid = std::chrono::high_resolution_clock::now();
+        duration_getNeighbors_avoid += end_ngh_avoid - start_ngh_avoid;
+
+        auto start_do_avoid = std::chrono::high_resolution_clock::now();        
         boid.updateAvoidanceDirection(ngh_avoid);
+        auto end_do_avoid = std::chrono::high_resolution_clock::now();
+        duration_doAvoid += end_do_avoid - start_do_avoid;
 
         boid.update();
     }
+    auto start_rtree_update = std::chrono::high_resolution_clock::now();
     rtree.clear();
     this->popualateRtree();
+    auto end_rtree_update = std::chrono::high_resolution_clock::now();
+    duration_rtree_update += end_rtree_update - start_rtree_update;
 
+    std::cout << "NF: " << duration_getNeighbors_flock.count()
+        << " DF: " << duration_doFlocking.count() 
+        << " NA: " << duration_getNeighbors_avoid.count() 
+        << " DA: " << duration_doAvoid.count() 
+        << " RT: " << duration_rtree_update.count() 
+        << std::endl;
 }
 
 
