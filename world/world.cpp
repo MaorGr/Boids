@@ -5,6 +5,8 @@ namespace bgi = boost::geometry::index;
 
 int Boid::maxId = 0;
 
+
+
 World::World(World::Config &config) : config_(config) {
 
 
@@ -26,7 +28,7 @@ World::World(World::Config &config) : config_(config) {
         
         boids.emplace_back(margin + int(dis(gen) * width * 10.0f) % (width - 2* margin), 
                            margin + int(dis(gen) * height * 10.0f) % (height - 2* margin),
-                           vx + 10.0, vy);
+                           vx, vy);
 
     }
 
@@ -56,33 +58,31 @@ void World::update() {
 
     for (auto& boid : boids) {
         handleMargins(boid); 
-        auto start_ngh_flock = std::chrono::high_resolution_clock::now();
-        auto ngh_flock = getNeighbors(boid, 40);
-        auto end_ngh_flock = std::chrono::high_resolution_clock::now();
-        duration_getNeighbors_flock += end_ngh_flock - start_ngh_flock;
-
-        auto start_do_flock = std::chrono::high_resolution_clock::now();
-        boid.doFlocking(ngh_flock);
-        auto end_do_flock = std::chrono::high_resolution_clock::now();
-        duration_doFlocking += end_do_flock - start_do_flock;
-
-        auto start_ngh_avoid = std::chrono::high_resolution_clock::now();
-        auto ngh_avoid = getNeighbors(boid, 5);
-        auto end_ngh_avoid = std::chrono::high_resolution_clock::now();
-        duration_getNeighbors_avoid += end_ngh_avoid - start_ngh_avoid;
-
-        auto start_do_avoid = std::chrono::high_resolution_clock::now();        
-        boid.updateAvoidanceDirection(ngh_avoid);
-        auto end_do_avoid = std::chrono::high_resolution_clock::now();
-        duration_doAvoid += end_do_avoid - start_do_avoid;
-
+        decltype(getNeighbors(boid, 100)) ngh_flock;
+        decltype(getNeighbors(boid, 100)) ngh_avoid;
+        {
+            Profiler profile(duration_getNeighbors_flock);
+            ngh_flock = getNeighbors(boid, 40);
+        }
+        {
+            Profiler profile(duration_doFlocking);
+            boid.doFlocking(ngh_flock);
+        }
+        {
+            Profiler profile(duration_getNeighbors_avoid);
+            ngh_flock = getNeighbors(boid, 8);
+        }
+        {
+            Profiler profile(duration_doAvoid);
+            boid.updateAvoidanceDirection(ngh_avoid);
+        }
         boid.update();
     }
-    auto start_rtree_update = std::chrono::high_resolution_clock::now();
-    rtree.clear();
-    this->popualateRtree();
-    auto end_rtree_update = std::chrono::high_resolution_clock::now();
-    duration_rtree_update += end_rtree_update - start_rtree_update;
+    {
+        Profiler profile(duration_rtree_update);
+        rtree.clear();
+        this->popualateRtree();
+    }
 
     std::cout << "NF: " << duration_getNeighbors_flock.count()
         << " DF: " << duration_doFlocking.count() 

@@ -12,20 +12,15 @@
 
 #include "boid.h"
 #include "geometry.h"
-// #include "../external/quad/Quadtree.h"
+#include "../aux/profiler.h"
 
-
-
-
-// Use full namespace here to make it clear to users of this header what's going on.
-// using Point = boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian>;
-// using Box = boost::geometry::model::box<Point>;
-using Value = std::pair<Box, Boid*>;  // Assuming each Boid has a unique unsigned integer ID
+using Value = std::pair<Box, Boid*>;  
 
 class World {
 private:
     std::vector<Boid> boids;
-    boost::geometry::index::rtree<Value, boost::geometry::index::quadratic<10>> rtree;
+    boost::geometry::index::rtree<Value, boost::geometry::index::quadratic<64>> rtree;
+    // todo: optimize (or parametrize) rtree quadratic<64>
     int width;
     int height;
     int margin;
