@@ -54,15 +54,9 @@ void World::update() {
     std::chrono::duration<double> duration_doAvoid = std::chrono::duration<double>::zero();
     std::chrono::duration<double> duration_rtree_update = std::chrono::duration<double>::zero();
 
-
-    // todo(maor): add threads! take care of profiling as well
-    // perhaps using something like
-    // ... thread_local std::chrono::duration<double> local_duration_getNeighbors_flock;
-
     for (auto& boid : boids) {
         handleMargins(boid); 
     }
-
 
     unsigned num_threads = std::thread::hardware_concurrency();
     std::vector<std::thread> threads(num_threads);
