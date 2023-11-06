@@ -29,6 +29,7 @@ public:
         int width;
         int height;
         int margin;
+        float dt;
     };
     Config config_;
 

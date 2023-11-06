@@ -6,10 +6,7 @@ namespace bgi = boost::geometry::index;
 
 int Boid::maxId = 0;
 
-
-
 World::World(World::Config &config) : config_(config) {
-
 
     this->width = config.width;
     this->height = config.height;
@@ -62,32 +59,53 @@ void World::update() {
     // perhaps using something like
     // ... thread_local std::chrono::duration<double> local_duration_getNeighbors_flock;
 
-    // unsigned num_threads = std::thread::hardware_concurrency();
-    // std::vector<std::thread> threads(num_threads);
-    // auto boid_per_thread = boids.size() / num_threads;
-
     for (auto& boid : boids) {
-
-        
         handleMargins(boid); 
-        decltype(getNeighbors(boid, 1)) ngh_flock;
-        decltype(getNeighbors(boid, 1)) ngh_avoid;
-        {
-            Profiler profile(duration_getNeighbors_flock);
-            ngh_flock = getNeighbors(boid, 40);
-        }
-        {
-            Profiler profile(duration_doFlocking);
-            boid.doFlocking(ngh_flock);
-        }
-        {
-            Profiler profile(duration_getNeighbors_avoid);
-            ngh_flock = getNeighbors(boid, 8);
-        }
-        {
-            Profiler profile(duration_doAvoid);
-            boid.updateAvoidanceDirection(ngh_avoid);
-        }
+    }
+
+
+    unsigned num_threads = std::thread::hardware_concurrency();
+    std::vector<std::thread> threads(num_threads);
+    auto boid_per_thread = boids.size() / num_threads;
+
+    for (unsigned i = 0; i < num_threads; ++i) {
+        threads[i] = std::thread([&, i]() {
+
+            auto start = boids.begin() + i * boid_per_thread;
+            auto end = (i == num_threads - 1) ? boids.end() : start + boid_per_thread;
+            for (auto it = start; it != end; ++it) {
+                
+                decltype(getNeighbors(*it, 1)) ngh_flock;
+                decltype(getNeighbors(*it, 1)) ngh_avoid;
+                {
+                    Profiler profile(duration_getNeighbors_flock);
+                    ngh_flock = getNeighbors(*it, 40);
+                }
+                {
+                    Profiler profile(duration_doFlocking);
+                    it->doFlocking(ngh_flock);
+                }
+                {
+                    Profiler profile(duration_getNeighbors_avoid);
+                    ngh_flock = getNeighbors(*it, 8);
+                }
+                {
+                    Profiler profile(duration_doAvoid);
+                    it->updateAvoidanceDirection(ngh_avoid);
+                }
+            }
+            std::cout << "thread" << i 
+                << " NF: " << duration_getNeighbors_flock.count()
+                << " DF: " << duration_doFlocking.count() 
+                << " NA: " << duration_getNeighbors_avoid.count() 
+                << " DA: " << duration_doAvoid.count() 
+                << std::endl;
+        });
+    }
+    for (auto& t : threads) {
+       t.join();
+    }
+    for (auto& boid : boids) {
         boid.update();
     }
     {
@@ -95,16 +113,8 @@ void World::update() {
         rtree.clear();
         this->popualateRtree();
     }
-
-    std::cout << "NF: " << duration_getNeighbors_flock.count()
-        << " DF: " << duration_doFlocking.count() 
-        << " NA: " << duration_getNeighbors_avoid.count() 
-        << " DA: " << duration_doAvoid.count() 
-        << " RT: " << duration_rtree_update.count() 
-        << std::endl;
+    std::cout << " RT: " << duration_rtree_update.count() << std::endl;
 }
-
-
 
 void World::handleMargins(Boid& boid) {
 
