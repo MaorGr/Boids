@@ -1,4 +1,5 @@
 #include "world.h"
+#include <thread>
 
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -56,10 +57,21 @@ void World::update() {
     std::chrono::duration<double> duration_doAvoid = std::chrono::duration<double>::zero();
     std::chrono::duration<double> duration_rtree_update = std::chrono::duration<double>::zero();
 
+
+    // todo(maor): add threads! take care of profiling as well
+    // perhaps using something like
+    // ... thread_local std::chrono::duration<double> local_duration_getNeighbors_flock;
+
+    // unsigned num_threads = std::thread::hardware_concurrency();
+    // std::vector<std::thread> threads(num_threads);
+    // auto boid_per_thread = boids.size() / num_threads;
+
     for (auto& boid : boids) {
+
+        
         handleMargins(boid); 
-        decltype(getNeighbors(boid, 100)) ngh_flock;
-        decltype(getNeighbors(boid, 100)) ngh_avoid;
+        decltype(getNeighbors(boid, 1)) ngh_flock;
+        decltype(getNeighbors(boid, 1)) ngh_avoid;
         {
             Profiler profile(duration_getNeighbors_flock);
             ngh_flock = getNeighbors(boid, 40);
@@ -98,20 +110,33 @@ void World::handleMargins(Boid& boid) {
 
     Eigen::Vector2f position = boid.getPosition();
     Eigen::Vector2f velocity = boid.getVelocity();
+    float turnfactor = 0.2;
     if (position.x() < margin) {
-        position[0] = 2 * margin - position.x();
+        velocity[0] += turnfactor;
+    } 
+    if (position.x() < 0) {
+        position[0] = -1.0f * position.x();
         velocity[0] = velocity.x() * -1.0f;
     } 
-    else if (position.x() > width - margin) {
-        position[0] = 2 * (width - margin) - position.x();
+    if (position.x() > width - margin) {
+        velocity[0] -= turnfactor;
+    } 
+    if (position.x() > width) {
+        position[0] = 2 * (width) - position.x();
         velocity[0] = velocity.x() * -1.0f;
     } 
     if (position.y() < margin) {
-        position[1] = 2 * margin - position.y();
+        velocity[1] += turnfactor;
+    } 
+    if (position.y() < 0) {
+        position[1] = -1.0f - position.y();
         velocity[1] = velocity.y() * -1.0f;
     } 
-    else if (position.y() > height - margin) {
-        position[1] = 2 * (height - margin) -  position.y();
+    if (position.y() > height - margin) {
+        velocity[1] -= turnfactor;
+    } 
+    if (position.y() > height) {
+        position[1] = 2 * (height) -  position.y();
         velocity[1] = velocity.y() * -1.0f;
     } 
     boid.setPosition(position);
