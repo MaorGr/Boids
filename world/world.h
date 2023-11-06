@@ -22,20 +22,19 @@ private:
     int width;
     int height;
     int margin;
+    float dt;
 
 public:
 
-    struct Config {
+    struct WorldConfig {
         int width;
         int height;
         int margin;
         float dt;
     };
-    Config config_;
-
-    World(const std::map<std::string, std::string>& configMap);  // Constructor to initialize from JSON
+    WorldConfig config_;
     
-    World(Config &config);
+    World(WorldConfig &config);
     std::vector<Boid> getBoids();
     void update();
 

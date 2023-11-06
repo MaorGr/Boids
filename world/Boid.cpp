@@ -15,8 +15,8 @@ Boid::Boid(float x, float y) : position(x, y), velocity(0, 0), acceleration(0, 0
     // this->position = Point(x, y);
     // this->velocity = Point(0, 0);
     // this->acceleration = Point(0, 0);
-    touchRadius = 2.5;
-    sensingRadius = 50;
+    touchRadius = 1;
+
     // this->bbox = Box(Point(x - touchRadius, y - touchRadius), Point(x + touchRadius, y + touchRadius));
     this->id = this->maxId;
     this->maxId += 1;
@@ -105,7 +105,7 @@ void Boid::doFlocking(std::vector<Boid> &neighbors) {
     }
 }
 
-void Boid::update() {
+void Boid::update(float dt) {
 
     this->velocity = this->velocity + this->acceleration * DT;
     if (this->velocity.norm() > MAX_SPEED) {
@@ -113,7 +113,7 @@ void Boid::update() {
     } else if (this->velocity.norm() > MIN_SPEED){
         this->velocity = this->velocity / MIN_SPEED;
     }
-    this->position = this->position + this->velocity * DT;
+    this->position = this->position + this->velocity * dt;
 }
 
 std::optional<std::pair<Vector2f, Vector2f>> Boid::getBoidsAvgInfo(const std::vector<Boid>& boids) {
@@ -128,8 +128,9 @@ std::optional<std::pair<Vector2f, Vector2f>> Boid::getBoidsAvgInfo(const std::ve
         Vector2f deltaV = other.velocity - this->velocity;
         const float dist = deltaP.norm();
         if (dist > 0) {
-            float velW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
-            float posW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
+            // todo(maor): explore weight by inverse distance
+            // float velW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
+            // float posW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
             sumPos += deltaP;
             sumVel += deltaV;
         }

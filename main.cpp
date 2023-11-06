@@ -30,9 +30,9 @@ void readJSONConfig(const std::string& filepath, rapidjson::Document& doc) {
     doc.ParseStream(isw);
 }
 
-World::Config readConfig(rapidjson::Document &config_json) {
+World::WorldConfig readConfig(rapidjson::Document &config_json) {
 
-    World::Config world_config;
+    World::WorldConfig world_config;
     if (config_json.HasMember("world")) {
         const rapidjson::Value& world_json = config_json["world"];
 
@@ -45,12 +45,15 @@ World::Config readConfig(rapidjson::Document &config_json) {
         if (world_json.HasMember("margin")) {
             world_config.margin= world_json["margin"].GetInt();
         }
+        if (world_json.HasMember("dt")) {
+            world_config.margin= world_json["dt"].GetInt();
+        }
     }    
     return world_config;
 }
 
 void boid_draw(sf::RenderWindow& window, Boid boid) {
-    sf::CircleShape shape(5);  // simple circle for each boid
+    sf::CircleShape shape(1);  // simple circle for each boid
     sf::Vector2f pos = sf::Vector2f(boid.getPosition().x(), boid.getPosition().y());
     shape.setPosition(pos);
     window.draw(shape);
@@ -64,7 +67,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Config: " << FLAGS_config_path << std::endl;
     rapidjson::Document config_json;
     readJSONConfig(FLAGS_config_path, config_json);
-    World::Config world_config = readConfig(config_json);
+    World::WorldConfig world_config = readConfig(config_json);
 
     std::cout << "window " << world_config.width << std::endl;
 

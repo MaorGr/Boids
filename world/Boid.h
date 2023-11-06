@@ -10,10 +10,20 @@ private:
     Eigen::Vector2f velocity;
     Eigen::Vector2f acceleration;
     float touchRadius;
-    float sensingRadius;
     Box bbox;
 
 public:
+    struct Config {
+        int type_id;
+        float max_speed;
+        float min_speed;
+        float avoid_radius;
+        float sense_radius;
+        float avoid_factor;
+        float matching_factor;
+        float centering_factor;
+        
+    };
     Boid(float x, float y, float vx, float vy);
     Boid(float x, float y);
     Vector2f getPosition();
@@ -34,7 +44,7 @@ public:
 
     // // template <typename GetBoxFunc>
     // void update(const quadtree::Quadtree<Boid*, GetBoxFunctor>& quadtree);
-    void update();
+    void update(float dt);
     std::optional<std::pair<Vector2f, Vector2f>> getBoidsAvgInfo(const std::vector<Boid>& boids);
 
 };

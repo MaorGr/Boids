@@ -6,11 +6,12 @@ namespace bgi = boost::geometry::index;
 
 int Boid::maxId = 0;
 
-World::World(World::Config &config) : config_(config) {
+World::World(World::WorldConfig &config) : config_(config) {
 
     this->width = config.width;
     this->height = config.height;
     this->margin = config.margin;
+    this->dt = config.dt;
 
     float max_speed = 100;
     std::random_device rd;  // Used to initialize the seed
@@ -100,7 +101,7 @@ void World::update() {
        t.join();
     }
     for (auto& boid : boids) {
-        boid.update();
+        boid.update(this->dt);
     }
     {
         Profiler profile(duration_rtree_update);
