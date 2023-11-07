@@ -11,6 +11,7 @@
 #include "boid.h"
 #include "geometry.h"
 #include "../aux/profiler.h"
+#include "../aux/config.h"
 
 using Value = std::pair<Box, Boid*>;  
 

@@ -18,7 +18,7 @@ World::World(World::WorldConfig &config) : config_(config) {
     std::mt19937 gen(rd()); // Mersenne Twister pseudo-random generator
     std::uniform_real_distribution<> dis(0.0, 1.0); // Uniform distribution between 0.0 and 1.0
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 3000; i++) {
         float dir = dis(gen) * 2.0f * M_PI;
         float v0 = dis(gen) * max_speed;
         float vx = std::sin(dir) * v0;
