@@ -6,17 +6,17 @@
 Boid::Boid(float x, float y, float vx, float vy, const Boid::BoidConfig& config)
         : position(x, y), velocity(vx, vy), config_(config) {
         // Initialize other Boid members using config_
-        max_speed = config_.max_speed;
-        min_speed = config_.min_speed;
-        avoid_radius = config_.avoid_radius;
-        sense_radius = config_.sense_radius;
-        avoid_factor = config_.avoid_factor;
-        matching_factor = config_.matching_factor;
-        centering_factor = config_.matching_factor;
-        position[0] = x;
-        position[1] = y;
-        velocity[0] = vx;
-        velocity[1] = vy;
+        this->max_speed = config_.max_speed;
+        this->min_speed = config_.min_speed;
+        this->avoid_radius = config_.avoid_radius;
+        this->sense_radius = config_.sense_radius;
+        this->avoid_factor = config_.avoid_factor;
+        this->matching_factor = config_.matching_factor;
+        this->centering_factor = config_.matching_factor;
+        // this->position[0] = x;
+        // this->position[1] = y;
+        // this->velocity[0] = vx;
+        // this->velocity[1] = vy;
 }
 
 // Boid::Boid(float x, float y, float vx, float vy) : Boid(x, y) {
@@ -68,6 +68,7 @@ void Boid::setAvoidRadius(float radius){
 
 Box Boid::getBox() {
     // todo(maor): invalidate?
+    int touchRadius = 1;
     this->bbox = Box(Point(this->position.x() - touchRadius, this->position.y() - touchRadius), Point(this->position.x() + touchRadius, this->position.y() + touchRadius));
     return this->bbox;
 }

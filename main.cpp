@@ -5,7 +5,7 @@
 #include <cmath>
 #include <random>
 #include <gflags/gflags.h>
-// #include "external/quad/Quadtree.h"
+// #include <glog/logging.h>
 #include "external/rapidjson/rapidjson.h"
 #include "external/rapidjson/document.h"
 #include "external/rapidjson/istreamwrapper.h"
@@ -29,7 +29,7 @@ static World::WorldConfig ParseWorldConfig(rapidjson::Document &config_json) {
         world_config.height = Config::GetConfigValue<int>(world_json, "height", 600);
         world_config.margin = Config::GetConfigValue<int>(world_json, "margin", 10);
         world_config.dt = Config::GetConfigValue<float>(world_json, "dt", 0.1f);
-        world_config.dt = Config::GetConfigValue<int>(world_json, "boid_count", 1000);
+        world_config.boid_count = Config::GetConfigValue<int>(world_json, "boid_count", 1000);
     }
     return world_config;
 }
@@ -75,9 +75,7 @@ int main(int argc, char* argv[]) {
 
     World world = World(world_config);
     world.populate(boid_config);
-    std::cout << world.getBoids().size(); 
-    return 0;
-
+    
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {

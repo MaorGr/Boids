@@ -8,11 +8,11 @@
     },
     "parameter2": "Some string",
     "boid": {
-        "max_speed": 6,
-        "min_speed": 3,
-        "avoid_radius": 8,
+        "max_speed": 10,
+        "min_speed": 9,
+        "avoid_radius": 20,
         "sense_radius": 40,
-        "avoid_factor": 0.05,
+        "avoid_factor": 0.15,
         "matching_factor": 0.05,
         "centering_factor": 0.0005
     }

@@ -17,6 +17,9 @@ World::World(World::WorldConfig &config) : config_(config) {
 
 void World::populate(Boid::BoidConfig &boid_config) {
 
+    std::cout <<  ">>" << "populating: " << this->boid_count <<  std::endl;
+
+
     std::random_device rd;  // Used to initialize the seed
     std::mt19937 gen(rd()); // Mersenne Twister pseudo-random generator
     std::uniform_real_distribution<> dis(0.0, 1.0); // Uniform distribution between 0.0 and 1.0
@@ -26,7 +29,6 @@ void World::populate(Boid::BoidConfig &boid_config) {
         float v0 = dis(gen) * (boid_config.max_speed - boid_config.min_speed) + boid_config.min_speed;
         float vx = std::sin(dir) * v0;
         float vy = std::cos(dir) * v0;
-
         
         this->boids.emplace_back(margin + int(dis(gen) * width * 10.0f) % (width - 2* margin), 
                            margin + int(dis(gen) * height * 10.0f) % (height - 2* margin),
