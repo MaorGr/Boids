@@ -2,25 +2,37 @@
 #include <SFML/Graphics.hpp> 
 #include <iostream> // todo(maor): replace with a logging system
 
-const float DT = 1.0f; //TODO(remove)
-const float MAX_SPEED = 6.0f;
-const float MIN_SPEED = 3.0f;
 
-
-Boid::Boid(float x, float y, float vx, float vy) : Boid(x, y) {
-    this->velocity = Vector2f(vx, vy);
+Boid::Boid(float x, float y, float vx, float vy, const Boid::BoidConfig& config)
+        : position(x, y), velocity(vx, vy), config_(config) {
+        // Initialize other Boid members using config_
+        max_speed = config_.max_speed;
+        min_speed = config_.min_speed;
+        avoid_radius = config_.avoid_radius;
+        sense_radius = config_.sense_radius;
+        avoid_factor = config_.avoid_factor;
+        matching_factor = config_.matching_factor;
+        centering_factor = config_.matching_factor;
+        position[0] = x;
+        position[1] = y;
+        velocity[0] = vx;
+        velocity[1] = vy;
 }
 
-Boid::Boid(float x, float y) : position(x, y), velocity(0, 0), acceleration(0, 0) {
-    // this->position = Point(x, y);
-    // this->velocity = Point(0, 0);
-    // this->acceleration = Point(0, 0);
-    touchRadius = 1;
+// Boid::Boid(float x, float y, float vx, float vy) : Boid(x, y) {
+//     this->velocity = Vector2f(vx, vy);
+// }
 
-    // this->bbox = Box(Point(x - touchRadius, y - touchRadius), Point(x + touchRadius, y + touchRadius));
-    this->id = this->maxId;
-    this->maxId += 1;
-}
+// Boid::Boid(float x, float y) : position(x, y), velocity(0, 0), acceleration(0, 0) {
+//     // this->position = Point(x, y);
+//     // this->velocity = Point(0, 0);
+//     // this->acceleration = Point(0, 0);
+//     touchRadius = 1;
+
+//     // this->bbox = Box(Point(x - touchRadius, y - touchRadius), Point(x + touchRadius, y + touchRadius));
+//     this->id = this->maxId;
+//     this->maxId += 1;
+// }
 
 Vector2f Boid::getPosition() {
     return this->position;
@@ -38,6 +50,22 @@ void Boid::setVelocity(Vector2f velocity){
     this->velocity = velocity;
 }
 
+float Boid::getSenseRadius() {
+    return this->sense_radius;
+}
+
+void Boid::setSenseRadius(float radius){
+    this->sense_radius = radius;
+}
+
+float Boid::getAvoidRadius() {
+    return this->avoid_radius;
+}
+
+void Boid::setAvoidRadius(float radius){
+    this->avoid_radius = radius;
+}
+
 Box Boid::getBox() {
     // todo(maor): invalidate?
     this->bbox = Box(Point(this->position.x() - touchRadius, this->position.y() - touchRadius), Point(this->position.x() + touchRadius, this->position.y() + touchRadius));
@@ -48,15 +76,13 @@ void Boid::updateAvoidanceDirection(const std::vector<Boid>& neighbors) {
     Vector2f repulsion = Vector2f(0, 0); 
     // Vector2f predictiveAvoidance = Vector2f(0, 0);
 
-    float repulsion_factor = 0.15f;
-
     for (Boid neighbor : neighbors) {
         // Calculate distance to neighbor
         Vector2f delta = this->getPosition() - neighbor.getPosition();
         // float distance = delta.norm();
         repulsion -= delta;
     }
-    this->velocity += this->velocity + repulsion_factor * repulsion;
+    this->velocity += this->velocity + avoid_factor * repulsion;
 
     
  
@@ -88,10 +114,6 @@ void Boid::updateAvoidanceDirection(const std::vector<Boid>& neighbors) {
 
 void Boid::doFlocking(std::vector<Boid> &neighbors) {
     auto result = this->getBoidsAvgInfo(neighbors);
-
-    float matchingFactor = 0.05;
-    float centeringFactor = 0.0005;
-
     
     if (result) {
         Eigen::Vector2f avgPos = result->first;
@@ -100,18 +122,18 @@ void Boid::doFlocking(std::vector<Boid> &neighbors) {
 
         // Eigen::Vector2f deltaAcc = factorP * deltaPos + factorV * deltaVel;
         // this->acceleration = this->acceleration + deltaAcc;
-        this->velocity += (avgVel) * matchingFactor;
-        this->velocity += (avgPos) * centeringFactor;
+        this->velocity += (avgVel) * this->matching_factor;
+        this->velocity += (avgPos) * this->centering_factor;
     }
 }
 
 void Boid::update(float dt) {
 
-    this->velocity = this->velocity + this->acceleration * DT;
-    if (this->velocity.norm() > MAX_SPEED) {
-        this->velocity = this->velocity / MAX_SPEED; 
-    } else if (this->velocity.norm() > MIN_SPEED){
-        this->velocity = this->velocity / MIN_SPEED;
+    this->velocity = this->velocity + this->acceleration * dt;
+    if (this->velocity.norm() > this->max_speed) {
+        this->velocity = this->velocity / this->max_speed; 
+    } else if (this->velocity.norm() > this->min_speed){
+        this->velocity = this->velocity / this->min_speed;
     }
     this->position = this->position + this->velocity * dt;
 }
@@ -120,21 +142,15 @@ std::optional<std::pair<Vector2f, Vector2f>> Boid::getBoidsAvgInfo(const std::ve
     Vector2f sumPos(0, 0);
     Vector2f sumVel(0, 0);
     int count = 0;
-    const float perceptionRadius = 50.0f;
-    const float perceptionRadiusSqr = perceptionRadius*perceptionRadius;
-
     for (const auto& other : boids) {
         Vector2f deltaP = other.position - this->position;
         Vector2f deltaV = other.velocity - this->velocity;
-        const float dist = deltaP.norm();
-        if (dist > 0) {
-            // todo(maor): explore weight by inverse distance
-            // float velW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
-            // float posW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
-            sumPos += deltaP;
-            sumVel += deltaV;
-        }
-        
+        // todo(maor): explore weight by inverse distance
+        // const float dist = deltaP.norm();
+        // float velW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
+        // float posW = fmax(0, (perceptionRadius - dist) / perceptionRadius);
+        sumPos += deltaP;
+        sumVel += deltaV;        
         count++;
 
     }

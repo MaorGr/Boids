@@ -24,6 +24,7 @@ private:
     int height;
     int margin;
     float dt;
+    int boid_count;
 
 public:
 
@@ -32,6 +33,7 @@ public:
         int height;
         int margin;
         float dt;
+        int boid_count;
     };
     WorldConfig config_;
     
@@ -42,5 +44,6 @@ public:
     void handleMargins(Boid& boid);
     std::vector<Boid> getNeighbors(Boid& boid, float radius) const;
     void popualateRtree();
+    void populate(Boid::BoidConfig &boid_config);
 
 };

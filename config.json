@@ -4,15 +4,16 @@
         "height": 800,
         "margin": 100,
         "dt": 1,
-        "boid": {
-            "speed": 10,
-            "radius": 5.5
-        }
-    
+        "boid_count": 1000
     },
     "parameter2": "Some string",
     "boid": {
-        "speed": 10,
-        "radius": 5.5
+        "max_speed": 6,
+        "min_speed": 3,
+        "avoid_radius": 8,
+        "sense_radius": 40,
+        "avoid_factor": 0.05,
+        "matching_factor": 0.05,
+        "centering_factor": 0.0005
     }
 }

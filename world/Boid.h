@@ -11,9 +11,18 @@ private:
     Eigen::Vector2f acceleration;
     float touchRadius;
     Box bbox;
+    // from config
+    int type_id;
+    float max_speed;
+    float min_speed;
+    float avoid_radius;
+    float sense_radius;
+    float avoid_factor;
+    float matching_factor;
+    float centering_factor;
 
 public:
-    struct Config {
+    struct BoidConfig {
         int type_id;
         float max_speed;
         float min_speed;
@@ -24,12 +33,18 @@ public:
         float centering_factor;
         
     };
-    Boid(float x, float y, float vx, float vy);
-    Boid(float x, float y);
+
+    BoidConfig config_;
+
+    Boid(float x, float y, float vx, float vy, const BoidConfig& config);
     Vector2f getPosition();
     void setPosition(Vector2f position);
     Vector2f getVelocity();
     void setVelocity(Vector2f velocity);
+    float getSenseRadius();
+    void setSenseRadius(float velocity);
+    float getAvoidRadius();
+    void setAvoidRadius(float velocity);
     Box getBox();
     inline unsigned int getId() { return id; };
 

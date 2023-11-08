@@ -12,22 +12,27 @@ World::World(World::WorldConfig &config) : config_(config) {
     this->height = config.height;
     this->margin = config.margin;
     this->dt = config.dt;
+    this->boid_count = config.boid_count;
+}
 
-    float max_speed = 100;
+void World::populate(Boid::BoidConfig &boid_config) {
+
     std::random_device rd;  // Used to initialize the seed
     std::mt19937 gen(rd()); // Mersenne Twister pseudo-random generator
     std::uniform_real_distribution<> dis(0.0, 1.0); // Uniform distribution between 0.0 and 1.0
 
-    for (int i = 0; i < 3000; i++) {
+    for (int i = 0; i < this->boid_count; i++) {
         float dir = dis(gen) * 2.0f * M_PI;
-        float v0 = dis(gen) * max_speed;
+        float v0 = dis(gen) * (boid_config.max_speed - boid_config.min_speed) + boid_config.min_speed;
         float vx = std::sin(dir) * v0;
         float vy = std::cos(dir) * v0;
 
         
-        boids.emplace_back(margin + int(dis(gen) * width * 10.0f) % (width - 2* margin), 
+        this->boids.emplace_back(margin + int(dis(gen) * width * 10.0f) % (width - 2* margin), 
                            margin + int(dis(gen) * height * 10.0f) % (height - 2* margin),
-                           vx, vy);
+                           vx, vy, boid_config);
+
+        
 
     }
 
@@ -74,7 +79,7 @@ void World::update() {
                 decltype(getNeighbors(*it, 1)) ngh_avoid;
                 {
                     Profiler profile(duration_getNeighbors_flock);
-                    ngh_flock = getNeighbors(*it, 40);
+                    ngh_flock = getNeighbors(*it, it->getSenseRadius());
                 }
                 {
                     Profiler profile(duration_doFlocking);
@@ -82,7 +87,7 @@ void World::update() {
                 }
                 {
                     Profiler profile(duration_getNeighbors_avoid);
-                    ngh_flock = getNeighbors(*it, 8);
+                    ngh_flock = getNeighbors(*it, it->getAvoidRadius());
                 }
                 {
                     Profiler profile(duration_doAvoid);
