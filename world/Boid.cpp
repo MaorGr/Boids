@@ -17,6 +17,7 @@ Boid::Boid(float x, float y, float vx, float vy, const Boid::BoidConfig& config)
         // this->position[1] = y;
         // this->velocity[0] = vx;
         // this->velocity[1] = vy;
+        std::cout <<  this->min_speed << std::endl;
 }
 
 // Boid::Boid(float x, float y, float vx, float vy) : Boid(x, y) {
@@ -133,7 +134,7 @@ void Boid::update(float dt) {
     this->velocity = this->velocity + this->acceleration * dt;
     if (this->velocity.norm() > this->max_speed) {
         this->velocity = this->velocity / this->max_speed; 
-    } else if (this->velocity.norm() > this->min_speed){
+    } else if (this->velocity.norm() < this->min_speed){
         this->velocity = this->velocity / this->min_speed;
     }
     this->position = this->position + this->velocity * dt;

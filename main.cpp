@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 
     World world = World(world_config);
     world.populate(boid_config);
-    
+    return 0;
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
