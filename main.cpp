@@ -5,7 +5,7 @@
 #include <cmath>
 #include <random>
 #include <gflags/gflags.h>
-// #include <glog/logging.h>
+#include <glog/logging.h>
 #include "external/rapidjson/rapidjson.h"
 #include "external/rapidjson/document.h"
 #include "external/rapidjson/istreamwrapper.h"
@@ -21,15 +21,15 @@ DEFINE_string(config_path, "config.json", "path to config");
 static World::WorldConfig ParseWorldConfig(rapidjson::Document &config_json) {
 
     World::WorldConfig world_config;
-    std::cout << "hi";
     if (config_json.HasMember("world")) {
         const rapidjson::Value& world_json = config_json["world"];
 
         world_config.width = Config::GetConfigValue<int>(world_json, "width", 800);
         world_config.height = Config::GetConfigValue<int>(world_json, "height", 600);
-        world_config.margin = Config::GetConfigValue<int>(world_json, "margin", 10);
+        world_config.margin = Config::GetConfigValue<float>(world_json, "margin", 100);
         world_config.dt = Config::GetConfigValue<float>(world_json, "dt", 0.1f);
         world_config.boid_count = Config::GetConfigValue<int>(world_json, "boid_count", 1000);
+        world_config.turn_factor = Config::GetConfigValue<float>(world_json, "turn_factor", 0.2f);
     }
     return world_config;
 }
@@ -60,22 +60,24 @@ void boid_draw(sf::RenderWindow& window, Boid boid) {
 
 int main(int argc, char* argv[]) {
     // todo(maor): move to config 
+
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
+    google::InitGoogleLogging(argv[0]);
+    // TODO(maor): is there a nicer way?
+    FLAGS_minloglevel = 0;
+    FLAGS_logtostderr = true;
     int width;
     int height;
-    gflags::ParseCommandLineFlags(&argc, &argv, true);
     std::cout << "Config file: " << FLAGS_config_path << std::endl;
     rapidjson::Document config_json;
     Config::readJSONConfig(FLAGS_config_path, config_json);
     World::WorldConfig world_config = ParseWorldConfig(config_json);
     Boid::BoidConfig boid_config = ParseBoidConfig(config_json);
 
-    std::cout << "window " << world_config.width << std::endl;
-
-    sf::RenderWindow window(sf::VideoMode(world_config.width, world_config.height), "Swarm Behavior");
-
     World world = World(world_config);
     world.populate(boid_config);
-    return 0;
+
+    sf::RenderWindow window(sf::VideoMode(world_config.width, world_config.height), "Swarm Behavior");
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {

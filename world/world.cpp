@@ -17,7 +17,7 @@ World::World(World::WorldConfig &config) : config_(config) {
 
 void World::populate(Boid::BoidConfig &boid_config) {
 
-    std::cout <<  ">>" << "populating: " << this->boid_count <<  std::endl;
+    LOG(INFO) <<  ">>" << "populating: " << this->boid_count <<  std::endl;
 
 
     std::random_device rd;  // Used to initialize the seed
@@ -30,8 +30,8 @@ void World::populate(Boid::BoidConfig &boid_config) {
         float vx = std::sin(dir) * v0;
         float vy = std::cos(dir) * v0;
         
-        this->boids.emplace_back(margin + int(dis(gen) * width * 10.0f) % (width - 2* margin), 
-                           margin + int(dis(gen) * height * 10.0f) % (height - 2* margin),
+        this->boids.emplace_back(margin + fmod(float(dis(gen) * width * 10.0f), float(width - 2* margin)), 
+                           margin + fmod(float(dis(gen) * height * 10.0f), float(height - 2* margin)),
                            vx, vy, boid_config);
 
         
@@ -96,7 +96,7 @@ void World::update() {
                     it->updateAvoidanceDirection(ngh_avoid);
                 }
             }
-            std::cout << "thread" << i 
+            LOG(INFO) << "thread" << i 
                 << " NF: " << duration_getNeighbors_flock.count()
                 << " DF: " << duration_doFlocking.count() 
                 << " NA: " << duration_getNeighbors_avoid.count() 
@@ -107,6 +107,22 @@ void World::update() {
     for (auto& t : threads) {
        t.join();
     }
+    LOG(INFO) << this->dt << std::endl;
+
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    
+    // TODO(maor): parametrize
+    double mean = 0.0;  // No bias in noise
+    double stddev = 0.1;
+    std::normal_distribution<double> d(mean, stddev);
+
+    for (auto& boid : boids) {
+        Eigen::Vector2f noise = Eigen::Vector2f(d(gen), d(gen));
+        boid.setVelocity(boid.getVelocity() += noise);
+    }
+
     for (auto& boid : boids) {
         boid.update(this->dt);
     }
@@ -115,37 +131,37 @@ void World::update() {
         rtree.clear();
         this->popualateRtree();
     }
-    std::cout << " RT: " << duration_rtree_update.count() << std::endl;
+    LOG(INFO) << " RT: " << duration_rtree_update.count() << std::endl;
 }
 
 void World::handleMargins(Boid& boid) {
 
     Eigen::Vector2f position = boid.getPosition();
     Eigen::Vector2f velocity = boid.getVelocity();
-    float turnfactor = 0.2;
+
     if (position.x() < margin) {
-        velocity[0] += turnfactor;
+        velocity[0] += this->turn_factor;
     } 
     if (position.x() < 0) {
         position[0] = -1.0f * position.x();
         velocity[0] = velocity.x() * -1.0f;
     } 
     if (position.x() > width - margin) {
-        velocity[0] -= turnfactor;
+        velocity[0] -= this->turn_factor;
     } 
     if (position.x() > width) {
         position[0] = 2 * (width) - position.x();
         velocity[0] = velocity.x() * -1.0f;
     } 
     if (position.y() < margin) {
-        velocity[1] += turnfactor;
+        velocity[1] += this->turn_factor;
     } 
     if (position.y() < 0) {
         position[1] = -1.0f - position.y();
         velocity[1] = velocity.y() * -1.0f;
     } 
     if (position.y() > height - margin) {
-        velocity[1] -= turnfactor;
+        velocity[1] -= this->turn_factor;
     } 
     if (position.y() > height) {
         position[1] = 2 * (height) -  position.y();

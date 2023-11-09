@@ -3,6 +3,7 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include <Eigen/Geometry>
+#include <cmath>
 
 
 namespace bg = boost::geometry;

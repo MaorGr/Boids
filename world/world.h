@@ -7,6 +7,8 @@
 #include <chrono>  // for the high-resolution clock
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
+#include <glog/logging.h>
+
 
 #include "boid.h"
 #include "geometry.h"
@@ -22,18 +24,20 @@ private:
     // todo: optimize (or parametrize) rtree quadratic<64>
     int width;
     int height;
-    int margin;
+    float margin;
     float dt;
     int boid_count;
+    float turn_factor;
 
 public:
 
     struct WorldConfig {
         int width;
         int height;
-        int margin;
+        float margin;
         float dt;
         int boid_count;
+        float turn_factor;
     };
     WorldConfig config_;
     

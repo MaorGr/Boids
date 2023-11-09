@@ -9,11 +9,9 @@ class Config {
 public:
     // Method to load and parse the configuration file, then return a WorldConfig object
     static void readJSONConfig(const std::string& configFilePath, rapidjson::Document& doc) {
-        std::cout << "hi" << std::endl;
         std::ifstream file(configFilePath);
         rapidjson::IStreamWrapper isw(file);
         doc.ParseStream(isw);
-        std::cout << "bye"; 
     }
 
     // Helper method to extract configuration values

@@ -1,18 +1,19 @@
 {
     "world": {
-        "width": 1000,
+        "width": 1100,
         "height": 800,
-        "margin": 100,
-        "dt": 1,
-        "boid_count": 1000
+        "margin": 100.0,
+        "dt": 1.0,
+        "boid_count": 2000,
+        "turn_factor": 0.9
     },
     "parameter2": "Some string",
     "boid": {
-        "max_speed": 10,
-        "min_speed": 9,
-        "avoid_radius": 20,
-        "sense_radius": 40,
-        "avoid_factor": 0.15,
+        "max_speed": 6.0,
+        "min_speed": 3.0,
+        "avoid_radius": 20.0,
+        "sense_radius": 40.0,
+        "avoid_factor": 0.25,
         "matching_factor": 0.05,
         "centering_factor": 0.0005
     }

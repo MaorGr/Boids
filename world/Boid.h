@@ -1,6 +1,8 @@
 #pragma once
 
+#include <glog/logging.h>
 #include "geometry.h"
+
 
 class Boid {
 private:
