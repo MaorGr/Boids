@@ -6,3 +6,4 @@
 bin/
 build/
 .vscode/
+boid_paths.csv

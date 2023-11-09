@@ -15,6 +15,7 @@
 #include "world/boid.h"
 #include "world/geometry.h"
 #include "aux/config.h"
+#include "tracker/tracker.h"
 
 DEFINE_string(config_path, "config.json", "path to config");
 
@@ -78,7 +79,10 @@ int main(int argc, char* argv[]) {
     World world = World(world_config);
     world.populate(boid_config);
 
+    Tracker tracker("boid_paths.csv", world, 10);
+
     sf::RenderWindow window(sf::VideoMode(world_config.width, world_config.height), "Swarm Behavior");
+    int step = 0;
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -94,6 +98,10 @@ int main(int argc, char* argv[]) {
             boid_draw(window, boid);
         }
         window.display();
+        step += 1;
+
+        tracker.update(world);
+        LOG(INFO) << "step: " << step << std::endl;
     }
 
     return 0;

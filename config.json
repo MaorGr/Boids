@@ -13,7 +13,7 @@
         "min_speed": 3.0,
         "avoid_radius": 20.0,
         "sense_radius": 40.0,
-        "avoid_factor": 0.5,
+        "avoid_factor": 0.7,
         "matching_factor": 0.02,
         "centering_factor": 0.0002
     }

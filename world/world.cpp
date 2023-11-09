@@ -51,7 +51,7 @@ void World::popualateRtree() {
     }
 }
 
-std::vector<Boid> World::getBoids() {
+std::vector<Boid> World::getBoids() const {
     return boids;
 }
 

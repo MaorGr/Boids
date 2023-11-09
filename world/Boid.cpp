@@ -34,7 +34,7 @@ Boid::Boid(float x, float y, float vx, float vy, const Boid::BoidConfig& config)
 //     this->maxId += 1;
 // }
 
-Vector2f Boid::getPosition() {
+Vector2f Boid::getPosition() const {
     return this->position;
 }
 
@@ -42,7 +42,7 @@ void Boid::setPosition(Vector2f position) {
     this->position = position;
 }
 
-Vector2f Boid::getVelocity() {
+Vector2f Boid::getVelocity() const {
     return this->velocity;
 }
 
@@ -50,7 +50,7 @@ void Boid::setVelocity(Vector2f velocity){
     this->velocity = velocity;
 }
 
-float Boid::getSenseRadius() {
+float Boid::getSenseRadius() const {
     return this->sense_radius;
 }
 
@@ -58,7 +58,7 @@ void Boid::setSenseRadius(float radius){
     this->sense_radius = radius;
 }
 
-float Boid::getAvoidRadius() {
+float Boid::getAvoidRadius() const {
     return this->avoid_radius;
 }
 

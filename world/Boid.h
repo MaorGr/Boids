@@ -39,13 +39,13 @@ public:
     BoidConfig config_;
 
     Boid(float x, float y, float vx, float vy, const BoidConfig& config);
-    Vector2f getPosition();
+    Vector2f getPosition() const;
     void setPosition(Vector2f position);
-    Vector2f getVelocity();
+    Vector2f getVelocity() const;
     void setVelocity(Vector2f velocity);
-    float getSenseRadius();
+    float getSenseRadius() const;
     void setSenseRadius(float velocity);
-    float getAvoidRadius();
+    float getAvoidRadius() const;
     void setAvoidRadius(float velocity);
     Box getBox();
     inline unsigned int getId() { return id; };

@@ -42,12 +42,13 @@ public:
     WorldConfig config_;
     
     World(WorldConfig &config);
-    std::vector<Boid> getBoids();
+    std::vector<Boid> getBoids() const;
     void update();
 
     void handleMargins(Boid& boid);
     std::vector<Boid> getNeighbors(Boid& boid, float radius) const;
     void popualateRtree();
     void populate(Boid::BoidConfig &boid_config);
+
 
 };
