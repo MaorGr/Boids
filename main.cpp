@@ -30,6 +30,7 @@ static World::WorldConfig ParseWorldConfig(rapidjson::Document &config_json) {
         world_config.dt = Config::GetConfigValue<float>(world_json, "dt", 0.1f);
         world_config.boid_count = Config::GetConfigValue<int>(world_json, "boid_count", 1000);
         world_config.turn_factor = Config::GetConfigValue<float>(world_json, "turn_factor", 0.2f);
+        LOG(INFO) << "world_config.turn_factor" << world_config.turn_factor << std::endl;
     }
     return world_config;
 }

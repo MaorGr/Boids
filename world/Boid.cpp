@@ -17,7 +17,6 @@ Boid::Boid(float x, float y, float vx, float vy, const Boid::BoidConfig& config)
         // this->position[1] = y;
         // this->velocity[0] = vx;
         // this->velocity[1] = vy;
-        LOG(INFO) << this->velocity[0] << ", " << this->velocity[1] << std::endl;
 }
 
 // Boid::Boid(float x, float y, float vx, float vy) : Boid(x, y) {

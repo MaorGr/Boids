@@ -13,6 +13,7 @@ World::World(World::WorldConfig &config) : config_(config) {
     this->margin = config.margin;
     this->dt = config.dt;
     this->boid_count = config.boid_count;
+    this->turn_factor = config.turn_factor;
 }
 
 void World::populate(Boid::BoidConfig &boid_config) {
