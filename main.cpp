@@ -79,7 +79,15 @@ int main(int argc, char* argv[]) {
     World world = World(world_config);
     world.populate(boid_config);
 
-    Tracker tracker("boid_paths.csv", world, 10);
+
+    std::string boid_paths;
+    if (config_json.HasMember("out")) {
+        const rapidjson::Value& out_coufig = config_json["out"];
+        boid_paths = Config::GetConfigValue<std::string>(out_coufig, "boid_paths", "data/boid_paths.csv");
+    }
+    LOG(INFO) << "writing paths to " << boid_paths << std::endl;
+
+    Tracker tracker(boid_paths, world, 3);
 
     sf::RenderWindow window(sf::VideoMode(world_config.width, world_config.height), "Swarm Behavior");
     int step = 0;

@@ -1,7 +1,7 @@
 {
     "world": {
-        "width": 1100,
-        "height": 800,
+        "width": 1000,
+        "height": 1000,
         "margin": 200.0,
         "dt": 1.0,
         "boid_count": 2000,
@@ -16,5 +16,8 @@
         "avoid_factor": 0.7,
         "matching_factor": 0.02,
         "centering_factor": 0.0002
+    },
+    "out": {
+        "boid_paths": "data/boid_paths_2.csv"
     }
 }

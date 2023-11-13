@@ -6,4 +6,5 @@
 bin/
 build/
 .vscode/
+otuout/
 boid_paths.csv

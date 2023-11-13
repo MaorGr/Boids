@@ -39,7 +39,7 @@ bounds_x_3 = np.array([200, 200])
 bounds_y_3 = np.array([800, 200])
 
 # Number of frames for the animation
-num_frames = 400
+num_frames = 160
 
 # Interpolate bounds for each frame
 x_bounds = np.concatenate([
@@ -123,7 +123,7 @@ def update(frame):
 anim = FuncAnimation(fig, update, frames=num_frames, blit=True)
 
 # Save the animation
-anim.save('boid_paths_animation_03.gif', fps=30, writer='pillow', savefig_kwargs={'facecolor':'black'})
+anim.save('boid_paths_animation_03_s.gif', fps=30, writer='pillow', savefig_kwargs={'facecolor':'black'})
 #anim.save('boid_paths_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 # anim.save('boid_paths_animation.gif', fps=30, writer='pillow')
 plt.close()

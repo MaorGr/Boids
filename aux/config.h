@@ -23,6 +23,15 @@ public:
         return defaultValue;
     }
 
+   // Template specialization for std::string
+    template<>
+    std::string GetConfigValue<std::string>(const rapidjson::Value& value, const char* memberName, const std::string& defaultValue) {
+        if (value.HasMember(memberName) && value[memberName].IsString()) {
+            return value[memberName].GetString();
+        }
+        return defaultValue;
+    }
+
     // // Method to parse the "world" section of the config file
     // static WorldConfig ParseWorldConfig(const rapidjson::Document& config_json) {
     //     WorldConfig world_config;
