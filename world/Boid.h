@@ -38,7 +38,7 @@ public:
 
     BoidConfig config_;
 
-    Boid(float x, float y, float vx, float vy, const BoidConfig& config);
+    Boid(float x, float y, float vx, float vy, const BoidConfig& config, unsigned int id);
     Vector2f getPosition() const;
     void setPosition(Vector2f position);
     Vector2f getVelocity() const;
@@ -48,7 +48,7 @@ public:
     float getAvoidRadius() const;
     void setAvoidRadius(float velocity);
     Box getBox();
-    inline unsigned int getId() { return id; };
+    unsigned int getId();
 
     // quadtree::Box <float> box;
     // quadtree::Box <float> getBox() const;

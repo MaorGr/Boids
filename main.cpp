@@ -31,7 +31,8 @@ static World::WorldConfig ParseWorldConfig(rapidjson::Document &config_json) {
         world_config.dt = Config::GetConfigValue<float>(world_json, "dt", 0.1f);
         world_config.boid_count = Config::GetConfigValue<int>(world_json, "boid_count", 1000);
         world_config.turn_factor = Config::GetConfigValue<float>(world_json, "turn_factor", 0.2f);
-        LOG(INFO) << "world_config.turn_factor" << world_config.turn_factor << std::endl;
+        world_config.potential_path = Config::GetConfigValue<std::string>(world_json, "potential", "");
+        LOG(INFO) << "world_config.potential" << world_config.potential_path << std::endl;
     }
     return world_config;
 }
@@ -65,8 +66,10 @@ int main(int argc, char* argv[]) {
 
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     google::InitGoogleLogging(argv[0]);
-    // TODO(maor): is there a nicer way?
-    FLAGS_minloglevel = 0;
+    // TODO(maor): find a nicer way?
+    // FLAGS_minloglevel = 0;
+    // FLAGS_alsologtostderr = true;
+    // FLAGS_log_dir = "/Users/maorgrinberg/Code/boids101/logs";
     FLAGS_logtostderr = true;
     int width;
     int height;

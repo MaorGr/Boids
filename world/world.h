@@ -8,6 +8,7 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include <glog/logging.h>
+#include <opencv2/opencv.hpp>
 
 
 #include "boid.h"
@@ -28,6 +29,7 @@ private:
     float dt;
     int boid_count;
     float turn_factor;
+    cv::Mat potential;
 
 public:
 
@@ -38,6 +40,7 @@ public:
         float dt;
         int boid_count;
         float turn_factor;
+        std::string potential_path;
     };
     WorldConfig config_;
     

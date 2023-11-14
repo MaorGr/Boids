@@ -1,11 +1,12 @@
 {
     "world": {
-        "width": 1000,
-        "height": 1000,
+        "width": 800,
+        "height":800,
         "margin": 200.0,
         "dt": 1.0,
         "boid_count": 2000,
-        "turn_factor": 0.21
+        "turn_factor": 0.21,
+        "potential": "input/Am0.png"
     },
     "parameter2": "Some string",
     "boid": {
@@ -18,6 +19,6 @@
         "centering_factor": 0.0002
     },
     "out": {
-        "boid_paths": "data/boid_paths_2.csv"
+        "boid_paths": "data/boid_paths_3.csv"
     }
 }

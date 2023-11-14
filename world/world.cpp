@@ -14,6 +14,14 @@ World::World(World::WorldConfig &config) : config_(config) {
     this->dt = config.dt;
     this->boid_count = config.boid_count;
     this->turn_factor = config.turn_factor;
+    LOG(INFO) << "??" << config_.potential_path << std::endl;
+    if (!config_.potential_path.empty()) {
+        LOG(INFO) << "loading potential from" << config_.potential_path << std::endl;
+        this->potential = cv::imread(config_.potential_path, cv::IMREAD_GRAYSCALE);
+        if (this->potential.empty()) {
+            LOG(INFO) << "Error: Image could not be loaded from the path." << std::endl;
+        }
+    }
 }
 
 void World::populate(Boid::BoidConfig &boid_config) {
@@ -23,7 +31,7 @@ void World::populate(Boid::BoidConfig &boid_config) {
 
     std::random_device rd;  // Used to initialize the seed
     std::mt19937 gen(rd()); // Mersenne Twister pseudo-random generator
-    std::uniform_real_distribution<> dis(0.0, 1.0); // Uniform distribution between 0.0 and 1.0
+    std::uniform_real_distribution<> dis(0.1, 1.0); // Uniform distribution between 0.0 and 1.0
 
     for (int i = 0; i < this->boid_count; i++) {
         float dir = dis(gen) * 2.0f * M_PI;
@@ -31,9 +39,9 @@ void World::populate(Boid::BoidConfig &boid_config) {
         float vx = std::sin(dir) * v0;
         float vy = std::cos(dir) * v0;
         
-        this->boids.emplace_back(margin + fmod(float(dis(gen) * width * 10.0f), float(width - 2* margin)), 
-                           margin + fmod(float(dis(gen) * height * 10.0f), float(height - 2* margin)),
-                           vx, vy, boid_config);
+        this->boids.emplace_back(margin + fmod(float(dis(gen) * width * 10.0f), float(width - 2.0 * margin)), 
+                           margin + fmod(float(dis(gen) * height * 10.0f), float(height - 2.0 * margin)),
+                           vx, vy, boid_config, i);
 
         
 
@@ -47,6 +55,9 @@ void World::populate(Boid::BoidConfig &boid_config) {
 void World::popualateRtree() {
     for (auto& boid : boids) {
         Value value = Value(boid.getBox(), &boid);
+        Box box = value.first;
+        const Point& min_corner = box.min_corner();
+        const Point& max_corner = box.max_corner();
         rtree.insert(value);
     }
 }
@@ -70,6 +81,8 @@ void World::update() {
     unsigned num_threads = std::thread::hardware_concurrency();
     std::vector<std::thread> threads(num_threads);
     auto boid_per_thread = boids.size() / num_threads;
+
+
 
     for (unsigned i = 0; i < num_threads; ++i) {
         threads[i] = std::thread([&, i]() {
@@ -119,10 +132,10 @@ void World::update() {
     double stddev = 0.1;
     std::normal_distribution<double> d(mean, stddev);
 
-    for (auto& boid : boids) {
-        Eigen::Vector2f noise = Eigen::Vector2f(d(gen), d(gen));
-        boid.setVelocity(boid.getVelocity() += noise);
-    }
+    // for (auto& boid : boids) {
+    //     Eigen::Vector2f noise = Eigen::Vector2f(d(gen), d(gen));
+    //     boid.setVelocity(boid.getVelocity() += noise);
+    // }
 
     for (auto& boid : boids) {
         boid.update(this->dt);
@@ -134,6 +147,10 @@ void World::update() {
     }
     LOG(INFO) << " RT: " << duration_rtree_update.count() << std::endl;
 }
+
+// void World::applyField(Boid& boid) {
+
+// }
 
 void World::handleMargins(Boid& boid) {
 
