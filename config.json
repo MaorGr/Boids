@@ -5,7 +5,7 @@
         "margin": 200.0,
         "dt": 1.0,
         "boid_count": 2000,
-        "turn_factor": 1.0,
+        "turn_factor": 10.0,
         "potential": "input/A0.png"
     },
     "parameter2": "Some string",
