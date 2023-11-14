@@ -21,7 +21,15 @@ World::World(World::WorldConfig &config) : config_(config) {
         if (this->potential.empty()) {
             LOG(INFO) << "Error: Image could not be loaded from the path." << std::endl;
         }
+        this->calculateForce();
     }
+}
+
+void World::calculateForce() {
+
+    // todo: add and parametrize a gaussiaon filter
+    cv::Sobel(this->potential, this->force_x, CV_32F, 1, 0);
+    cv::Sobel(this->potential, this->force_y, CV_32F, 0, 1);
 }
 
 void World::populate(Boid::BoidConfig &boid_config) {
@@ -75,7 +83,8 @@ void World::update() {
     std::chrono::duration<double> duration_rtree_update = std::chrono::duration<double>::zero();
 
     for (auto& boid : boids) {
-        handleMargins(boid); 
+        // handleMargins(boid);
+        handleForce(boid);
     }
 
     unsigned num_threads = std::thread::hardware_concurrency();
@@ -132,10 +141,10 @@ void World::update() {
     double stddev = 0.1;
     std::normal_distribution<double> d(mean, stddev);
 
-    // for (auto& boid : boids) {
-    //     Eigen::Vector2f noise = Eigen::Vector2f(d(gen), d(gen));
-    //     boid.setVelocity(boid.getVelocity() += noise);
-    // }
+    for (auto& boid : boids) {
+        Eigen::Vector2f noise = Eigen::Vector2f(d(gen), d(gen));
+        boid.setVelocity(boid.getVelocity() += noise);
+    }
 
     for (auto& boid : boids) {
         boid.update(this->dt);
@@ -148,9 +157,35 @@ void World::update() {
     LOG(INFO) << " RT: " << duration_rtree_update.count() << std::endl;
 }
 
-// void World::applyField(Boid& boid) {
+void World::handleForce(Boid &boid) {
+    Eigen::Vector2f position = boid.getPosition();
+    Eigen::Vector2f velocity = boid.getVelocity();
+    if (position.x() < 0) {
+        position[0] = -1.0f * position.x();
+        velocity[0] = velocity.x() * -1.0f;
+    } 
+    if (position.x() > width) {
+        position[0] = 2 * (width) - position.x();
+        velocity[0] = velocity.x() * -1.0f;
+    } 
+    if (position.y() < 0) {
+        position[1] = -1.0f - position.y();
+        velocity[1] = velocity.y() * -1.0f;
+    } 
+    if (position.y() > height) {
+        position[1] = 2 * (height) -  position.y();
+        velocity[1] = velocity.y() * -1.0f;
+    } 
+    
+    float forceX = this->force_x.at<float>(int(position[0]), int(position[1]));
+    float forceY = this->force_y.at<float>(int(position[0]), int(position[1]));
+    velocity[0] += forceX * this->turn_factor;
+    velocity[1] += forceY * this->turn_factor;
 
-// }
+    boid.setPosition(position);
+    boid.setVelocity(velocity);
+
+}
 
 void World::handleMargins(Boid& boid) {
 

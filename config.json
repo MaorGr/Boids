@@ -1,12 +1,12 @@
 {
     "world": {
-        "width": 800,
-        "height":800,
+        "width": 1000,
+        "height": 1000,
         "margin": 200.0,
         "dt": 1.0,
         "boid_count": 2000,
-        "turn_factor": 0.21,
-        "potential": "input/Am0.png"
+        "turn_factor": 1.0,
+        "potential": "input/A0.png"
     },
     "parameter2": "Some string",
     "boid": {

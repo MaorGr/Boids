@@ -30,6 +30,8 @@ private:
     int boid_count;
     float turn_factor;
     cv::Mat potential;
+    cv::Mat force_x;
+    cv::Mat force_y;
 
 public:
 
@@ -49,9 +51,12 @@ public:
     void update();
 
     void handleMargins(Boid& boid);
+    void handleForce(Boid &boid);
     std::vector<Boid> getNeighbors(Boid& boid, float radius) const;
     void popualateRtree();
     void populate(Boid::BoidConfig &boid_config);
 
+
+    void calculateForce();
 
 };
