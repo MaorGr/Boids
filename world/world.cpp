@@ -21,6 +21,8 @@ World::World(World::WorldConfig &config) : config_(config) {
         if (this->potential.empty()) {
             LOG(INFO) << "Error: Image could not be loaded from the path." << std::endl;
         }
+        this->width = this->potential.cols;
+        this->height = this->potential.rows;
         this->calculateForce();
     }
 }
@@ -66,7 +68,21 @@ void World::popualateRtree() {
         Box box = value.first;
         const Point& min_corner = box.min_corner();
         const Point& max_corner = box.max_corner();
-        rtree.insert(value);
+        try {
+            rtree.insert(value);
+        } catch (const std::runtime_error& e) {
+        // Handle the exception
+            LOG(INFO) << "Caught an exception: " << e.what() << std::endl;
+            float x0 = boost::geometry::get<0>(min_corner); // Get x-coordinate
+            float y0 = boost::geometry::get<1>(min_corner); // Get y-coordinate
+            float x1 = boost::geometry::get<0>(max_corner); // Get x-coordinate
+            float y1 = boost::geometry::get<1>(max_corner); // Get y-coordinate
+
+            LOG(INFO) << "Point coordinates: (" << x0 << ", " << y0 << ")" << ", " 
+                        << "(" << x1 << ", " << y1 << ")" <<  std::endl;
+
+        } catch (...) {
+            LOG(INFO) << "Caught an exception: " << std::endl;        }
     }
 }
 
@@ -82,9 +98,16 @@ void World::update() {
     std::chrono::duration<double> duration_doAvoid = std::chrono::duration<double>::zero();
     std::chrono::duration<double> duration_rtree_update = std::chrono::duration<double>::zero();
 
-    for (auto& boid : boids) {
-        // handleMargins(boid);
-        handleForce(boid);
+    if (this->potential.empty()) {
+        for (auto& boid : boids) {
+            keepInFrame(boid);
+            handleMargins(boid);
+        }
+    } else {
+        for (auto& boid : boids) {
+            keepInFrame(boid);
+            handleForce(boid);
+        }
     }
 
     unsigned num_threads = std::thread::hardware_concurrency();
@@ -119,19 +142,17 @@ void World::update() {
                     it->updateAvoidanceDirection(ngh_avoid);
                 }
             }
-            LOG(INFO) << "thread" << i 
-                << " NF: " << duration_getNeighbors_flock.count()
-                << " DF: " << duration_doFlocking.count() 
-                << " NA: " << duration_getNeighbors_avoid.count() 
-                << " DA: " << duration_doAvoid.count() 
-                << std::endl;
+            // LOG(INFO) << "thread" << i 
+            //     << " NF: " << duration_getNeighbors_flock.count()
+            //     << " DF: " << duration_doFlocking.count() 
+            //     << " NA: " << duration_getNeighbors_avoid.count() 
+            //     << " DA: " << duration_doAvoid.count() 
+            //     << std::endl;
         });
     }
     for (auto& t : threads) {
        t.join();
     }
-    LOG(INFO) << this->dt << std::endl;
-
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -148,16 +169,17 @@ void World::update() {
 
     for (auto& boid : boids) {
         boid.update(this->dt);
+        keepInFrame(boid);
     }
     {
         Profiler profile(duration_rtree_update);
         rtree.clear();
         this->popualateRtree();
     }
-    LOG(INFO) << " RT: " << duration_rtree_update.count() << std::endl;
+    // LOG(INFO) << " RT: " << duration_rtree_update.count() << std::endl;
 }
 
-void World::handleForce(Boid &boid) {
+void World::keepInFrame(Boid &boid) {
     Eigen::Vector2f position = boid.getPosition();
     Eigen::Vector2f velocity = boid.getVelocity();
     if (position.x() < 0) {
@@ -176,9 +198,16 @@ void World::handleForce(Boid &boid) {
         position[1] = 2 * (height) -  position.y();
         velocity[1] = velocity.y() * -1.0f;
     } 
+}
+
+void World::handleForce(Boid &boid) {
+    Eigen::Vector2f position = boid.getPosition();
+    Eigen::Vector2f velocity = boid.getVelocity();
+    unsigned int x_i = std::max(0,std::min(width, int(position[0])));
+    unsigned int y_i = std::max(0,std::min(height, int(position[1])));
     
-    float forceX = this->force_x.at<float>(int(position[0]), int(position[1]));
-    float forceY = this->force_y.at<float>(int(position[0]), int(position[1]));
+    float forceX = this->force_x.at<float>(y_i, x_i);
+    float forceY = this->force_y.at<float>(y_i, x_i);
     velocity[0] += forceX * this->turn_factor;
     velocity[1] += forceY * this->turn_factor;
 

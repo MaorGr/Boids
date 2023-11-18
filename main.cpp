@@ -82,7 +82,6 @@ int main(int argc, char* argv[]) {
     World world = World(world_config);
     world.populate(boid_config);
 
-
     std::string boid_paths;
     if (config_json.HasMember("out")) {
         const rapidjson::Value& out_coufig = config_json["out"];
@@ -92,7 +91,7 @@ int main(int argc, char* argv[]) {
 
     Tracker tracker(boid_paths, world, 3);
 
-    sf::RenderWindow window(sf::VideoMode(world_config.width, world_config.height), "Swarm Behavior");
+    sf::RenderWindow window(sf::VideoMode(world.getWidth(), world.getHeight()), "Swarm Behavior");
     int step = 0;
     while (window.isOpen()) {
         sf::Event event;

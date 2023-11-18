@@ -50,6 +50,10 @@ public:
     std::vector<Boid> getBoids() const;
     void update();
 
+    int getWidth() { return this->width; };
+    int getHeight() { return this->height; };
+
+    void keepInFrame(Boid& boid);
     void handleMargins(Boid& boid);
     void handleForce(Boid &boid);
     std::vector<Boid> getNeighbors(Boid& boid, float radius) const;

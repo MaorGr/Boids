@@ -27,8 +27,8 @@ def plot_boid_paths(csv_file):
 
 
     # Define the rectangle bounds for filtering
-    x_bounds = [200, 400]
-    y_bounds = [200, 400]
+    x_bounds = [0, 2400]
+    y_bounds = [0, 2400]
 
     # Create a new plot with equal aspect ratio
     plt.figure(figsize=(11, 8))
@@ -56,17 +56,17 @@ def plot_boid_paths(csv_file):
     plt.gca().set_aspect('equal', adjustable='box')
 
     # Set limits to fully view the rectangle
-    plt.xlim(0, 1100)
-    plt.ylim(0, 800)
+    plt.xlim(0, 2400)
+    plt.ylim(0, 2400)
 
     # Hide axis labels for a cleaner look
     plt.axis('off')
 
     # Save the plot to a file
     # plt.savefig('boid_paths_filtered.png')
-    plt.savefig('boid_paths_filtered_smooth_black_background_3.png', facecolor='black', transparent=True)
+    plt.savefig('output/boid_paths_filtered_smooth_black_background_TORUS0.png', facecolor='black', transparent=True)
     
     plt.close()
 
 # Run the function with the CSV file name
-plot_boid_paths('data/boid_paths.csv')
+plot_boid_paths('data/boid_paths_torus0.csv')

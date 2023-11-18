@@ -1,12 +1,14 @@
 {
     "world": {
-        "width": 1000,
-        "height": 1000,
-        "margin": 200.0,
+        "width": 1200,
+        "height": 500,
+        "margin": 20.0,
         "dt": 1.0,
-        "boid_count": 2000,
-        "turn_factor": 10.0,
-        "potential": "input/A0.png"
+        "boid_count": 6000,
+        "turn_factor_margin": 0.2,
+        "turn_factor": 0.25,
+        "potential_A0": "input/A0.png",
+        "potential": "input/TORUS0.png"
     },
     "parameter2": "Some string",
     "boid": {
@@ -14,11 +16,11 @@
         "min_speed": 3.0,
         "avoid_radius": 20.0,
         "sense_radius": 40.0,
-        "avoid_factor": 0.7,
+        "avoid_factor": 0.6,
         "matching_factor": 0.02,
         "centering_factor": 0.0002
     },
     "out": {
-        "boid_paths": "data/boid_paths_3.csv"
+        "boid_paths": "data/boid_paths_torus0.csv"
     }
 }
