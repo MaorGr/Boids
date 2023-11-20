@@ -4,11 +4,11 @@
         "height": 500,
         "margin": 20.0,
         "dt": 1.0,
-        "boid_count": 6000,
+        "boid_count": 3000,
         "turn_factor_margin": 0.2,
-        "turn_factor": 0.25,
+        "turn_factor": 0.075,
         "potential_A0": "input/A0.png",
-        "potential": "input/TORUS0.png"
+        "potential": "input/STAR0.png"
     },
     "parameter2": "Some string",
     "boid": {
@@ -17,10 +17,10 @@
         "avoid_radius": 20.0,
         "sense_radius": 40.0,
         "avoid_factor": 0.6,
-        "matching_factor": 0.02,
+        "matching_factor": 0.03,
         "centering_factor": 0.0002
     },
     "out": {
-        "boid_paths": "data/boid_paths_torus0.csv"
+        "boid_paths": "data/boid_paths_STAR00.csv"
     }
 }
