@@ -21,6 +21,7 @@
         "centering_factor": 0.0002
     },
     "out": {
-        "boid_paths": "data/boid_paths_STAR00.csv"
+        "boid_paths": "data/boid_paths_STAR00.csv",
+        "render": "output/boid_paths_filtered_smooth_black_background_star02.png"
     }
 }

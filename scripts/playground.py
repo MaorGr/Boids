@@ -3,8 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.colors import LinearSegmentedColormap
-
 from scipy.interpolate import CubicSpline
+from PIL import Image
+
+from config_parser import parse_config_json
 
 def smooth_path(x, y):
     # Generate a sequence of indices
@@ -18,20 +20,38 @@ def smooth_path(x, y):
     y_new = cs_y(t_new)
     return x_new, y_new
 
-def plot_boid_paths(csv_file):
+def plot_boid_paths():
+
+    config = parse_config_json()
     # Load the data
-    data = pd.read_csv(csv_file)
+    print(config)
+    width, height = 1000, 1000
+    if 'potential' in config['world']:
+        image = Image.open(config['world']['potential'])
+
+        # Get dimensions
+        width, height = image.size
+    else:
+        width = config['world']['width']
+        height = config['world']['height']
+         
+
+    data = pd.read_csv(config['out']['boid_paths'])
 
     black_white_cmap = LinearSegmentedColormap.from_list('black_white', ['black', 'white', 'red'])
 
 
 
     # Define the rectangle bounds for filtering
-    x_bounds = [0, 1200]
-    y_bounds = [0, 1200]
+    x_bounds = [0, width]
+    y_bounds = [0, height]
 
     # Create a new plot with equal aspect ratio
     plt.figure(figsize=(11, 8))
+
+    num_rows = data.shape[0]
+    num_boids = num_rows / 2
+    print(num_boids)
 
     # Iterate over all 2000 boids to plot only those with ends within the specified rectangle
     for i in range(1, 4000, 2):  # Skip the first column (timepoint), then go in pairs (x, y)
@@ -56,17 +76,17 @@ def plot_boid_paths(csv_file):
     plt.gca().set_aspect('equal', adjustable='box')
 
     # Set limits to fully view the rectangle
-    plt.xlim(0, 1200)
-    plt.ylim(0, 1200)
+    plt.xlim(0, width)
+    plt.ylim(0, height)
 
     # Hide axis labels for a cleaner look
     plt.axis('off')
 
     # Save the plot to a file
     # plt.savefig('boid_paths_filtered.png')
-    plt.savefig('output/boid_paths_filtered_smooth_black_background_star001.png', facecolor='black', transparent=True)
+    plt.savefig(config['out']['render'], facecolor='black', transparent=True)
     
     plt.close()
 
 # Run the function with the CSV file name
-plot_boid_paths('data/boid_paths_STAR00.csv')
+plot_boid_paths()
