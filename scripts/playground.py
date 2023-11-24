@@ -49,12 +49,12 @@ def plot_boid_paths():
     # Create a new plot with equal aspect ratio
     plt.figure(figsize=(11, 8))
 
-    num_rows = data.shape[0]
-    num_boids = num_rows / 2
+    num_cols = data.shape[1]
+    num_boids = num_cols / 2
     print(num_boids)
 
     # Iterate over all 2000 boids to plot only those with ends within the specified rectangle
-    for i in range(1, 4000, 2):  # Skip the first column (timepoint), then go in pairs (x, y)
+    for i in range(1, num_cols, 2):  # Skip the first column (timepoint), then go in pairs (x, y)
         x = data.iloc[:, i]
         y = data.iloc[:, i + 1]
         

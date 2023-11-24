@@ -6,22 +6,23 @@
         "dt": 1.0,
         "boid_count": 3000,
         "turn_factor_margin": 0.2,
-        "turn_factor": 0.075,
+        "turn_factor": 0.05,
         "potential_A0": "input/A0.png",
-        "potential": "input/STAR0.png"
+        "potential_S0": "input/STAR0.png",
+        "potential": "input/HOLES0.png"
     },
     "parameter2": "Some string",
     "boid": {
         "max_speed": 6.0,
         "min_speed": 3.0,
-        "avoid_radius": 20.0,
+        "avoid_radius": 10.0,
         "sense_radius": 40.0,
-        "avoid_factor": 0.6,
-        "matching_factor": 0.03,
-        "centering_factor": 0.0002
+        "avoid_factor": 0.8,
+        "matching_factor": 0.04,
+        "centering_factor": 0.0005
     },
     "out": {
-        "boid_paths": "data/boid_paths_STAR00.csv",
-        "render": "output/boid_paths_filtered_smooth_black_background_star02.png"
+        "boid_paths": "data/boid_paths_HOLES0.csv",
+        "render": "output/boid_paths_holes0.png"
     }
 }

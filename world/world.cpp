@@ -185,7 +185,6 @@ void World::keepInFrame(Boid &boid) {
     if (position.x() < 0) {
         position[0] = -1.0f * position.x();
         velocity[0] = velocity.x() * -1.0f;
-
     } 
     if (position.x() > width) {
         position[0] = 2 * (width) - position.x();
