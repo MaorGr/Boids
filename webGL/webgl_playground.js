@@ -81,7 +81,7 @@ function initWebGLWithData(data) {
     vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
     // Create and compile the fragment shader
     fragmentShader = compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
-
+    
     // Create a shader program and attach the vertex and fragment shaders
     const shaderProgram = gl.createProgram();
     gl.attachShader(shaderProgram, vertexShader);
@@ -129,8 +129,17 @@ function render() {
     // Clear and draw as before
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    
+    
+    const pointSizeLocation = gl.getUniformLocation(shaderProgram, "u_PointSize");
+    const pointSize = 2.0; // Example point size
     gl.useProgram(window.shaderProgram);
-    gl.drawArrays(gl.LINES, 0, window.numberOfVertices);
+    gl.uniform1f(pointSizeLocation, pointSize);
+    // gl.drawArrays(gl.LINES, 0, window.numberOfVertices);
+    
+    // gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
+    // gl.vertexAttrib1f(gl.getAttribLocation(shaderProgram, "a_PointSize"), 1.0);
+    gl.drawArrays(gl.POINTS, 0, window.numberOfVertices);
 
     // Update the timepoint for the next frame
     currentTimepoint = (currentTimepoint + 1) % maxTimepoint;
@@ -172,9 +181,10 @@ function updateWebGLDataForTimepoint(data, timepoint) {
 // Vertex Shader GLSL code
 const vertexShaderSource = `
 attribute vec2 coordinates;
-
+uniform float u_PointSize;
 void main(void) {
     gl_Position = vec4(coordinates, 0.0, 1.0);
+    gl_PointSize = u_PointSize;
 }`;
 
 // Fragment Shader GLSL code
@@ -182,6 +192,21 @@ const fragmentShaderSource = `
 void main(void) {
     gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);  // White color
 }`;
+
+// const densityfragmentShaderSource = `
+// precision mediump float;
+// uniform vec2 u_points[N]; // Array of point positions
+// uniform float u_radius; // Radius for density calculation
+// void main() {
+//     float density = 0.0;
+//     for (int i = 0; i < N; i++) {
+//         if (distance(gl_FragCoord.xy, u_points[i]) < u_radius) {
+//             density += 1.0;
+//         }
+//     }
+//     // Map density to a color
+//     gl_FragColor = vec4(density, density, density, 1.0);
+// }`;
 
 // Get the canvas element
 var canvas = document.getElementById('webglCanvas');
