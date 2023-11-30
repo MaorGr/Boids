@@ -73,7 +73,7 @@ function initWebGLWithData(data) {
     const isVertexBufferBound = gl.getParameter(gl.ARRAY_BUFFER_BINDING) === vertexBuffer;
     console.log('Is vertex buffer bound:', isVertexBufferBound);
 
-    // Pass the vertex data to the buffer
+    // // Pass the vertex data to the buffer
     console.log('Transformed vertex data (10 items):', vertices.slice(0, 10));
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
@@ -81,7 +81,10 @@ function initWebGLWithData(data) {
     vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
     // Create and compile the fragment shader
     fragmentShader = compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
+    // fragmentShader = compileShader(gl, gaussianShaderSource, gl.FRAGMENT_SHADER);
     
+    
+
     // Create a shader program and attach the vertex and fragment shaders
     const shaderProgram = gl.createProgram();
     gl.attachShader(shaderProgram, vertexShader);
@@ -89,15 +92,22 @@ function initWebGLWithData(data) {
 
     // Link the program and use it
     gl.linkProgram(shaderProgram);
+
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        console.error('Shader program linking error:', gl.getProgramInfoLog(shaderProgram));
+    }
+    
+    const resolutionUniformLocation = gl.getUniformLocation(shaderProgram, "u_resolution");
     gl.useProgram(shaderProgram);
+    gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
 
     // Get the attribute location, enable it
     const coord = gl.getAttribLocation(shaderProgram, 'coordinates');
     gl.vertexAttribPointer(coord, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coord);
 
-    console.log(">>")
-    console.log(coord)
+    // console.log(">>")
+    // console.log(coord)
 
     // Store the necessary info for rendering
     window.vertexBuffer = vertexBuffer;
@@ -126,21 +136,21 @@ function render_() {
 function render() {
     updateWebGLDataForTimepoint(data, currentTimepoint);
     
+    gl.useProgram(window.shaderProgram);
+    
     // Clear and draw as before
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     
     
     const pointSizeLocation = gl.getUniformLocation(shaderProgram, "u_PointSize");
-    const pointSize = 2.0; // Example point size
-    gl.useProgram(window.shaderProgram);
+    const pointSize = 10.0; // Example point size
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
     gl.uniform1f(pointSizeLocation, pointSize);
-    // gl.drawArrays(gl.LINES, 0, window.numberOfVertices);
     
-    // gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
-    // gl.vertexAttrib1f(gl.getAttribLocation(shaderProgram, "a_PointSize"), 1.0);
     gl.drawArrays(gl.POINTS, 0, window.numberOfVertices);
-
+    gl.disable(gl.BLEND);
     // Update the timepoint for the next frame
     currentTimepoint = (currentTimepoint + 1) % maxTimepoint;
 
@@ -190,8 +200,37 @@ void main(void) {
 // Fragment Shader GLSL code
 const fragmentShaderSource = `
 void main(void) {
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);  // White color
+    gl_FragColor = vec4(0.1, 0.1, 0.1, 1.0);  // White color
 }`;
+
+const gaussianShaderSource = `
+precision mediump float;
+
+uniform sampler2D u_texture;
+uniform float u_resolution;
+varying vec2 v_texCoord;
+
+void main() {
+    float kernel[9];
+    kernel[0] = 1.0/16.0; kernel[1] = 1.0/8.0; kernel[2] = 1.0/16.0;
+    kernel[3] = 1.0/8.0;  kernel[4] = 1.0/4.0; kernel[5] = 1.0/8.0;
+    kernel[6] = 1.0/16.0; kernel[7] = 1.0/8.0; kernel[8] = 1.0/16.0;
+
+    vec2 onePixel = vec2(1.0, 1.0) / u_resolution;
+    
+    vec4 colorSum =
+        texture2D(u_texture, v_texCoord + onePixel * vec2(-1, -1)) * kernel[0] +
+        texture2D(u_texture, v_texCoord + onePixel * vec2( 0, -1)) * kernel[1] +
+        texture2D(u_texture, v_texCoord + onePixel * vec2( 1, -1)) * kernel[2] +
+        texture2D(u_texture, v_texCoord + onePixel * vec2(-1,  0)) * kernel[3] +
+        texture2D(u_texture, v_texCoord + onePixel * vec2( 0,  0)) * kernel[4] +
+        texture2D(u_texture, v_texCoord + onePixel * vec2( 1,  0)) * kernel[5] +
+        texture2D(u_texture, v_texCoord + onePixel * vec2(-1,  1)) * kernel[6] +
+        texture2D(u_texture, v_texCoord + onePixel * vec2( 0,  1)) * kernel[7] +
+        texture2D(u_texture, v_texCoord + onePixel * vec2( 1,  1)) * kernel[8];
+
+    gl_FragColor = colorSum;
+}`
 
 // const densityfragmentShaderSource = `
 // precision mediump float;
